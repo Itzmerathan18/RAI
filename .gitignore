@@ -1,0 +1,8 @@
+﻿backend/node_modules/
+frontend/node_modules/
+frontend/.next/
+rai-website/node_modules/
+rai-website/.next/
+.env
+.env.local
+backend/.env
