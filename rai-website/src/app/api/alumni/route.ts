@@ -1,31 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import connectDB from '@/lib/db';
+import AlumniModel from '@/models/Alumni';
+import { getAuthUser, unauthorizedResponse } from '@/lib/auth';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-    const { searchParams } = new URL(req.url);
-    const qs = searchParams.toString();
     try {
-        const res = await fetch(`${API}/alumni${qs ? `?${qs}` : ''}`, { next: { revalidate: 60 } });
-        const data = await res.json();
-        return NextResponse.json(data);
-    } catch {
-        return NextResponse.json({ success: false, data: [], message: 'Backend unavailable' }, { status: 200 });
+        await connectDB();
+        const { searchParams } = new URL(req.url);
+        const filter: Record<string, unknown> = {};
+        const year = searchParams.get('year');
+        if (year) filter.year = parseInt(year);
+
+        const data = await AlumniModel.find(filter).sort({ year: -1, name: 1 });
+        return Response.json({ success: true, count: data.length, data });
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Server error';
+        return Response.json({ success: false, data: [], message }, { status: 500 });
     }
 }
 
 export async function POST(req: NextRequest) {
-    const body = await req.json();
-    const token = req.headers.get('Authorization') || '';
+    const user = getAuthUser(req);
+    if (!user) return unauthorizedResponse();
     try {
-        const res = await fetch(`${API}/alumni`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: token },
-            body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        return NextResponse.json(data, { status: res.status });
-    } catch {
-        return NextResponse.json({ success: false, message: 'Backend unavailable' }, { status: 503 });
+        await connectDB();
+        const body = await req.json();
+        const doc = await AlumniModel.create(body);
+        return Response.json({ success: true, data: doc }, { status: 201 });
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Server error';
+        return Response.json({ success: false, message }, { status: 400 });
     }
 }

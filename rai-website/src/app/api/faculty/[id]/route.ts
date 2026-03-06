@@ -1,43 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import connectDB from '@/lib/db';
+import FacultyModel from '@/models/Faculty';
+import { getAuthUser, unauthorizedResponse } from '@/lib/auth';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export const dynamic = 'force-dynamic';
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const res = await fetch(`${API}/faculty/${params.id}`, { next: { revalidate: 60 } });
-        const data = await res.json();
-        return NextResponse.json(data);
-    } catch {
-        return NextResponse.json({ success: false, message: 'Backend unavailable' }, { status: 503 });
+        await connectDB();
+        const doc = await FacultyModel.findById(params.id);
+        if (!doc) return Response.json({ success: false, message: 'Not found' }, { status: 404 });
+        return Response.json({ success: true, data: doc });
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Server error';
+        return Response.json({ success: false, message }, { status: 500 });
     }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-    const body = await req.json();
-    const token = req.headers.get('Authorization') || '';
+    const user = getAuthUser(req);
+    if (!user) return unauthorizedResponse();
     try {
-        const res = await fetch(`${API}/faculty/${params.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: token },
-            body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        return NextResponse.json(data, { status: res.status });
-    } catch {
-        return NextResponse.json({ success: false, message: 'Backend unavailable' }, { status: 503 });
+        await connectDB();
+        const body = await req.json();
+        const doc = await FacultyModel.findByIdAndUpdate(params.id, body, { new: true, runValidators: true });
+        if (!doc) return Response.json({ success: false, message: 'Not found' }, { status: 404 });
+        return Response.json({ success: true, data: doc });
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Server error';
+        return Response.json({ success: false, message }, { status: 400 });
     }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-    const token = req.headers.get('Authorization') || '';
+    const user = getAuthUser(req);
+    if (!user) return unauthorizedResponse();
     try {
-        const res = await fetch(`${API}/faculty/${params.id}`, {
-            method: 'DELETE',
-            headers: { Authorization: token },
-        });
-        const data = await res.json();
-        return NextResponse.json(data, { status: res.status });
-    } catch {
-        return NextResponse.json({ success: false, message: 'Backend unavailable' }, { status: 503 });
+        await connectDB();
+        const doc = await FacultyModel.findByIdAndDelete(params.id);
+        if (!doc) return Response.json({ success: false, message: 'Not found' }, { status: 404 });
+        return Response.json({ success: true, message: 'Deleted successfully' });
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Server error';
+        return Response.json({ success: false, message }, { status: 500 });
     }
 }

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import connectDB from '@/lib/db';
-import ResearchModel from '@/models/Research';
+import PlacementModel from '@/models/Placement';
 import { getAuthUser, unauthorizedResponse } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
     try {
         await connectDB();
-        const doc = await ResearchModel.findById(params.id);
+        const doc = await PlacementModel.findById(params.id);
         if (!doc) return Response.json({ success: false, message: 'Not found' }, { status: 404 });
         return Response.json({ success: true, data: doc });
     } catch (err: unknown) {
@@ -23,7 +23,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     try {
         await connectDB();
         const body = await req.json();
-        const doc = await ResearchModel.findByIdAndUpdate(params.id, body, { new: true, runValidators: true });
+        const doc = await PlacementModel.findByIdAndUpdate(params.id, body, { new: true });
         if (!doc) return Response.json({ success: false, message: 'Not found' }, { status: 404 });
         return Response.json({ success: true, data: doc });
     } catch (err: unknown) {
@@ -37,7 +37,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (!user) return unauthorizedResponse();
     try {
         await connectDB();
-        const doc = await ResearchModel.findByIdAndDelete(params.id);
+        const doc = await PlacementModel.findByIdAndDelete(params.id);
         if (!doc) return Response.json({ success: false, message: 'Not found' }, { status: 404 });
         return Response.json({ success: true, message: 'Deleted successfully' });
     } catch (err: unknown) {

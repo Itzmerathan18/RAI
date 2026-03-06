@@ -14,7 +14,7 @@ import { GalleryModule } from './modules/GalleryModule';
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────
 type AdminUser = { name: string; role: string; email: string };
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API = '/api';
 
 async function apiReq(path: string, method = 'GET', body?: object) {
     const token = typeof window !== 'undefined' ? localStorage.getItem('rai_token') : null;
@@ -493,24 +493,14 @@ function PlacementsModule() {
 
 // ─── OVERVIEW ─────────────────────────────────────────────────────────────────
 function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
-    const [counts, setCounts] = useState({ faculty: 0, notices: 0, events: 0, placements: 0 });
+    const [counts, setCounts] = useState({ faculty: 0, notices: 0, research: 0, gallery: 0, achievements: 0, placements: 0 });
     const [loading, setLoading] = useState(true);
     useEffect(() => {
         const fetchCounts = async () => {
             setLoading(true);
             try {
-                const [f, n, e, p] = await Promise.all([
-                    apiReq('/faculty'),
-                    apiReq('/notices'),
-                    apiReq('/events'),
-                    apiReq('/placements')
-                ]);
-                setCounts({
-                    faculty: f.data?.length || 0,
-                    notices: n.data?.length || 0,
-                    events: e.data?.length || 0,
-                    placements: p.data?.length || 0
-                });
+                const r = await apiReq('/analytics');
+                if (r.success && r.data) setCounts(r.data);
             } catch {
                 console.error("Failed to fetch dashboard counts");
             } finally {
@@ -524,12 +514,14 @@ function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
         <div>
             <h1 className="font-display font-bold text-3xl text-white mb-1">Dashboard</h1>
             <p className="text-white/35 mb-8">RAI JNNCE · Content Management System</p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 {[
                     { label: 'Faculty', value: counts.faculty, icon: '👨‍🏫', color: 'text-primary-300', tab: 'faculty' },
+                    { label: 'Research', value: counts.research, icon: '🔬', color: 'text-blue-300', tab: 'research' },
+                    { label: 'Achievements', value: counts.achievements, icon: '🏆', color: 'text-yellow-300', tab: 'achievements' },
+                    { label: 'Gallery Events', value: counts.gallery, icon: '📷', color: 'text-pink-300', tab: 'gallery' },
                     { label: 'Notices', value: counts.notices, icon: '📢', color: 'text-red-300', tab: 'notices' },
-                    { label: 'Events', value: counts.events, icon: '📅', color: 'text-blue-300', tab: 'events' },
-                    { label: 'Placement Records', value: counts.placements, icon: '📊', color: 'text-accent-300', tab: 'placements' },
+                    { label: 'Placements', value: counts.placements, icon: '📊', color: 'text-accent-300', tab: 'placements' },
                 ].map(k => (
                     <motion.div key={k.label} whileHover={{ scale: 1.02 }} onClick={() => setTab(k.tab)}
                         className="glass-card p-5 cursor-pointer hover:border-primary-500/30 transition-all">
@@ -549,8 +541,8 @@ function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
                     {[
                         { label: 'Add Faculty Profile', emoji: '👨‍🏫', tab: 'faculty' },
                         { label: 'Publish New Notice', emoji: '📢', tab: 'notices' },
-                        { label: 'Create Event', emoji: '📅', tab: 'events' },
-                        { label: 'Update Placement Data', emoji: '📊', tab: 'placements' },
+                        { label: 'Add Gallery Event', emoji: '📷', tab: 'gallery' },
+                        { label: 'Add Research Project', emoji: '🔬', tab: 'research' },
                     ].map(a => (
                         <button key={a.tab} onClick={() => setTab(a.tab)}
                             className="flex items-center gap-3 p-4 rounded-xl bg-white/4 border border-white/8 hover:bg-primary-500/8 hover:border-primary-500/25 transition-all text-left">
@@ -563,9 +555,9 @@ function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
 
             <div className="glass-card p-5 mt-5">
                 <h3 className="font-semibold text-white text-sm mb-4">Data Storage</h3>
-                <p className="text-xs text-white/40 mb-3">All changes are pushed directly to MongoDB via the connected backend.</p>
+                <p className="text-xs text-white/40 mb-3">All changes go directly to MongoDB Atlas and appear instantly on the public website.</p>
                 <div className="flex items-center gap-2 text-xs text-accent-400 font-medium">
-                    <FiCheckCircle className="w-4 h-4" /> Live Backend Connected
+                    <FiCheckCircle className="w-4 h-4" /> MongoDB Atlas Connected
                 </div>
             </div>
         </div>
@@ -595,16 +587,7 @@ function LoginScreen({ onLogin }: { onLogin: (u: AdminUser) => void }) {
             onLogin(user);
             toast.success(`Welcome, ${user.name}!`);
         } catch {
-            // Fallback to local hardcoded check if API fails or backend is unreachable
-            if (form.email.toLowerCase().trim() === ADMIN_EMAIL && form.password === ADMIN_PASS) {
-                const u: AdminUser = { name: 'RAI Admin', role: 'super_admin', email: form.email };
-                localStorage.setItem('rai_token', 'local_admin_token');
-                localStorage.setItem('rai_user', JSON.stringify(u));
-                onLogin(u);
-                toast.success('Welcome, RAI Admin!');
-            } else {
-                setError('Invalid credentials. Check email and password.');
-            }
+            setError('Login failed. Check your credentials and try again.');
         } finally { setLoading(false); }
     };
 
