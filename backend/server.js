@@ -45,6 +45,42 @@ app.use('/api/notices', require('./routes/notices'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/alumni', require('./routes/alumni'));
+app.use('/api/research', require('./routes/research'));
+app.use('/api/publications', require('./routes/publications'));
+app.use('/api/labs', require('./routes/labs'));
+app.use('/api/achievements', require('./routes/achievements'));
+app.use('/api/gallery', require('./routes/gallery'));
+
+// Analytics endpoint — counts for admin overview
+app.get('/api/analytics', async (req, res) => {
+    try {
+        const [Faculty, Research, Publication, Notice, Lab, Achievement, Gallery, Student, Alumni, Placement] = [
+            require('./models/Faculty'),
+            require('./models/Research'),
+            require('./models/Publication'),
+            require('./models/Notice'),
+            require('./models/Lab'),
+            require('./models/Achievement'),
+            require('./models/Gallery'),
+            require('./models/Student'),
+            require('./models/Alumni'),
+            require('./models/Placement'),
+        ];
+        const [faculty, research, publications, notices, labs, achievements, gallery, students, alumni, placements] = await Promise.all([
+            Faculty.countDocuments(),
+            Research.countDocuments(),
+            Publication.countDocuments(),
+            Notice.countDocuments({ isActive: true }),
+            Lab.countDocuments(),
+            Achievement.countDocuments(),
+            Gallery.countDocuments(),
+            Student.countDocuments(),
+            Alumni.countDocuments(),
+            Placement.countDocuments(),
+        ]);
+        res.json({ success: true, data: { faculty, research, publications, notices, labs, achievements, gallery, students, alumni, placements } });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
 
 // Health check
 app.get('/api/health', (req, res) => {

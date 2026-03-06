@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js';
 import { Bar, Pie, Line } from 'react-chartjs-2';
+import Breadcrumb from '@/components/ui/Breadcrumb';
 
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement);
 
@@ -30,6 +31,8 @@ export default function PlacementsPage() {
     return (
         <div className="min-h-screen pt-20">
             <section className="py-20 px-4 max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <Breadcrumb items={[{ label: 'Placements' }]} />
+
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
                     <div className="inline-block px-4 py-1.5 rounded-full bg-accent-500/10 border border-accent-500/30 text-accent-300 text-sm mb-5">Placements Dashboard</div>
                     <h1 className="section-title text-5xl gradient-text mb-4">Placement & Career</h1>

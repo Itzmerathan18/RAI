@@ -13,7 +13,6 @@ function CyberFloor() {
     return (
         <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden pointer-events-none">
             <svg viewBox="0 0 400 80" className="w-full h-full" preserveAspectRatio="none">
-                {/* Perspective grid lines going to horizon */}
                 {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map(i => (
                     <line key={i} x1={200 + i * 8} y1="0" x2={200 + i * 160} y2="80"
                         stroke="#00E5FF" strokeWidth="0.5" opacity="0.15" />
@@ -28,7 +27,9 @@ function CyberFloor() {
 }
 
 /* ─── Stat Card ──────────────────────────────────────────────────── */
-const stats = [
+type StatItem = { label: string; value: number; suffix: string; icon: string };
+
+const DEFAULT_STATS: StatItem[] = [
     { label: 'Expert Faculty', value: 12, suffix: '+', icon: '👨‍🏫' },
     { label: 'Student Strength', value: 240, suffix: '+', icon: '👨‍🎓' },
     { label: 'Research Projects', value: 15, suffix: '+', icon: '🤖' },
@@ -37,7 +38,7 @@ const stats = [
     { label: 'Publications', value: 60, suffix: '+', icon: '📚' },
 ];
 
-function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
+function StatCard({ stat, index }: { stat: StatItem; index: number }) {
     const { ref, inView } = useInView({ triggerOnce: true });
     return (
         <motion.div ref={ref}
@@ -54,17 +55,19 @@ function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
     );
 }
 
-const notices = [
-    { tag: 'Exam', text: 'Internal Assessment I Schedule – March 2025', date: '28 Feb 2025' },
-    { tag: 'Event', text: 'Workshop on ROS2 & Gazebo Simulation – Register Now', date: '25 Feb 2025' },
-    { tag: 'Scholarship', text: 'VTU Scholarship Applications 2024-25 Open', date: '20 Feb 2025' },
-    { tag: 'Event', text: 'Robothon 2025 – Annual Robotics Hackathon', date: '15 Feb 2025' },
-];
+type Notice = { tag: string; text: string; date: string };
+const DEFAULT_NOTICES: Notice[] = [];
 
 const tagColors: Record<string, string> = {
     Exam: 'bg-red-500/15 text-red-400 border border-red-500/20',
     Event: 'bg-cyber/10 text-cyber border border-cyber/20',
     Scholarship: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',
+    Circular: 'bg-purple-500/15 text-purple-400 border border-purple-500/20',
+    Admission: 'bg-green-500/15 text-green-400 border border-green-500/20',
+    General: 'bg-white/10 text-white/60 border border-white/10',
+    Holiday: 'bg-green-600/15 text-green-400 border border-green-500/20',
+    Placement: 'bg-orange-500/15 text-orange-400 border border-orange-500/20',
+    Result: 'bg-pink-500/15 text-pink-400 border border-pink-500/20',
 };
 
 const researchAreas = [
@@ -78,7 +81,36 @@ const researchAreas = [
 
 export default function HomePage() {
     const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
+    const [stats, setStats] = useState<StatItem[]>(DEFAULT_STATS);
+    const [notices, setNotices] = useState<Notice[]>(DEFAULT_NOTICES);
+
+    useEffect(() => {
+        setMounted(true);
+        // Fetch analytics for live stats
+        fetch('/api/analytics').then(r => r.json()).then(json => {
+            if (json.success && json.data) {
+                const d = json.data;
+                setStats([
+                    { label: 'Expert Faculty', value: d.faculty || 12, suffix: '+', icon: '👨‍🏫' },
+                    { label: 'Student Strength', value: 240, suffix: '+', icon: '👨‍🎓' },
+                    { label: 'Research Projects', value: d.research || 15, suffix: '+', icon: '🤖' },
+                    { label: 'Placement Rate', value: 90, suffix: '%', icon: '📈' },
+                    { label: 'Publications', value: d.publications || 60, suffix: '+', icon: '📚' },
+                    { label: 'Achievements', value: d.achievements || 20, suffix: '+', icon: '🏆' },
+                ]);
+            }
+        }).catch(() => { });
+        // Fetch recent notices
+        fetch('/api/notices?limit=4&isActive=true').then(r => r.json()).then(json => {
+            if (json.data?.length) {
+                setNotices(json.data.map((n: any) => ({
+                    tag: n.category,
+                    text: n.title,
+                    date: new Date(n.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+                })));
+            }
+        }).catch(() => { });
+    }, []);
 
     return (
         <div className="min-h-screen overflow-x-hidden bg-black">

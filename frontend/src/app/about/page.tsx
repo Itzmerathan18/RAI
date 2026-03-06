@@ -37,7 +37,7 @@ export default function AboutPage() {
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
                     <div className="inline-block px-4 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/30 text-primary-300 text-sm mb-5">About the Department</div>
                     <h1 className="font-display font-black text-white mb-5" style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', lineHeight: 1.1 }}>
-                        Dept. of <span className="gradient-text">Robotics &amp; AI</span>
+                        Department of <span className="gradient-text">Robotics &amp; AI</span>
                     </h1>
                     <p className="text-white/55 max-w-2xl mx-auto text-base leading-relaxed">
                         Established in 2020, the Department of Robotics &amp; Artificial Intelligence at JNNCE, Shivamogga is an interdisciplinary department offering B.E. in Robotics &amp; AI, affiliated to Visvesvaraya Technological University (VTU), Belagavi. With an annual intake of 60 students, the department is committed to producing world-class engineers ready for the age of intelligent machines.

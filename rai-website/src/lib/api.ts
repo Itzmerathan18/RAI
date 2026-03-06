@@ -54,6 +54,43 @@ export const updateStudent = (id: string, data: object) => api.put(`/students/${
 // Alumni
 export const getAlumni = (params?: Record<string, string>) => api.get('/alumni', { params });
 export const createAlumni = (data: object) => api.post('/alumni', data);
+export const updateAlumni = (id: string, data: object) => api.put(`/alumni/${id}`, data);
+export const deleteAlumni = (id: string) => api.delete(`/alumni/${id}`);
+
+// Research
+export const getResearch = (params?: Record<string, string>) => api.get('/research', { params });
+export const getResearchById = (id: string) => api.get(`/research/${id}`);
+export const createResearch = (data: object) => api.post('/research', data);
+export const updateResearch = (id: string, data: object) => api.put(`/research/${id}`, data);
+export const deleteResearch = (id: string) => api.delete(`/research/${id}`);
+
+// Publications
+export const getPublications = (params?: Record<string, string>) => api.get('/publications', { params });
+export const createPublication = (data: object) => api.post('/publications', data);
+export const updatePublication = (id: string, data: object) => api.put(`/publications/${id}`, data);
+export const deletePublication = (id: string) => api.delete(`/publications/${id}`);
+
+// Labs
+export const getLabs = () => api.get('/labs');
+export const createLab = (data: object) => api.post('/labs', data);
+export const updateLab = (id: string, data: object) => api.put(`/labs/${id}`, data);
+export const deleteLab = (id: string) => api.delete(`/labs/${id}`);
+
+// Achievements
+export const getAchievements = (params?: Record<string, string>) => api.get('/achievements', { params });
+export const createAchievement = (data: object) => api.post('/achievements', data);
+export const updateAchievement = (id: string, data: object) => api.put(`/achievements/${id}`, data);
+export const deleteAchievement = (id: string) => api.delete(`/achievements/${id}`);
+
+// Gallery
+export const getGallery = (params?: Record<string, string>) => api.get('/gallery', { params });
+export const getGalleryById = (id: string) => api.get(`/gallery/${id}`);
+export const createGallery = (data: object) => api.post('/gallery', data);
+export const updateGallery = (id: string, data: object) => api.put(`/gallery/${id}`, data);
+export const deleteGallery = (id: string) => api.delete(`/gallery/${id}`);
+
+// Analytics
+export const getAnalytics = () => api.get('/analytics');
 
 // Auth
 export const login = (data: { email: string; password: string }) => api.post('/auth/login', data);

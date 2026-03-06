@@ -6,8 +6,11 @@ import {
     FiShield, FiEye, FiEyeOff, FiAlertCircle, FiLogOut,
     FiTrendingUp, FiUsers, FiBell, FiImage, FiBook,
     FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiCheckCircle,
-    FiMenu,
+    FiMenu, FiZap, FiAward, FiPackage, FiCpu,
 } from 'react-icons/fi';
+import { ResearchModule, PublicationsModule } from './modules/ResearchPublications';
+import { LabsModule, AchievementsModule } from './modules/LabsAchievements';
+import { GalleryModule } from './modules/GalleryModule';
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────
 type AdminUser = { name: string; role: string; email: string };
@@ -25,24 +28,10 @@ async function apiReq(path: string, method = 'GET', body?: object) {
 }
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
-type Faculty = { id: string; name: string; designation: string; qualification: string; specialization: string; experience: number; email: string; researchAreas: string };
-type Notice = { id: string; title: string; category: string; description: string; date: string; important: boolean };
-type Event = { id: string; title: string; category: string; date: string; venue: string; description: string };
-type Placement = { id: string; year: number; placed: number; total: number; highest: number; average: number; companies: string };
-
-// ─── SEED DATA ───────────────────────────────────────────────────────────────
-const SEED_FACULTY: Faculty[] = [];
-const SEED_NOTICES: Notice[] = [];
-const SEED_EVENTS: Event[] = [];
-const SEED_PLACEMENTS: Placement[] = [];
-
-function loadLS<T>(key: string, seed: T[]): T[] {
-    if (typeof window === 'undefined') return seed;
-    try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : seed; } catch { return seed; }
-}
-function saveLS<T>(key: string, data: T[]) {
-    if (typeof window !== 'undefined') localStorage.setItem(key, JSON.stringify(data));
-}
+type Faculty = { _id?: string; name: string; designation: string; qualification: string; specialization: string; experience: number; email: string; researchAreas: string | string[] };
+type Notice = { _id?: string; title: string; category: string; description: string; date: string; important: boolean; link?: string };
+type Event = { _id?: string; title: string; category: string; date: string; venue: string; description: string; images?: string[] };
+type Placement = { _id?: string; year: number; placed: number; total: number; highest: number; average: number; companies: string | string[] };
 
 // ─── MODAL ───────────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -76,33 +65,36 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm";
 
 // ─── FACULTY MODULE ───────────────────────────────────────────────────────────
-const BLANK_FACULTY: Faculty = { id: '', name: '', designation: '', qualification: '', specialization: '', experience: 0, email: '', researchAreas: '' };
+const BLANK_FACULTY: Faculty = { name: '', designation: '', qualification: '', specialization: '', experience: 0, email: '', researchAreas: '' };
 
 function FacultyModule() {
     const [data, setData] = useState<Faculty[]>([]);
     const [modal, setModal] = useState<'add' | 'edit' | null>(null);
     const [editing, setEditing] = useState<Faculty>(BLANK_FACULTY);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => { setData(loadLS('admin_faculty', SEED_FACULTY)); }, []);
+    useEffect(() => { load(); }, []);
 
-    const save = () => {
+    async function load() {
+        setLoading(true);
+        try { const r = await apiReq('/faculty'); setData(r.data || []); } catch { toast.error('Failed to load'); }
+        finally { setLoading(false); }
+    }
+
+    const save = async () => {
         if (!editing.name.trim() || !editing.email.trim()) { toast.error('Name and email are required'); return; }
-        let updated: Faculty[];
-        if (modal === 'add') {
-            updated = [...data, { ...editing, id: Date.now().toString() }];
-            toast.success('Faculty member added!');
-        } else {
-            updated = data.map(f => f.id === editing.id ? editing : f);
-            toast.success('Faculty updated!');
-        }
-        setData(updated); saveLS('admin_faculty', updated); setModal(null);
+        try {
+            const payload = { ...editing, researchAreas: typeof editing.researchAreas === 'string' ? editing.researchAreas.split(',').map(s => s.trim()).filter(Boolean) : editing.researchAreas };
+            if (modal === 'add') { await apiReq('/faculty', 'POST', payload); toast.success('Faculty member added!'); }
+            else { await apiReq(`/faculty/${editing._id}`, 'PUT', payload); toast.success('Faculty updated!'); }
+            setModal(null); load();
+        } catch (e: any) { toast.error(e.message || 'Error saving faculty'); }
     };
 
-    const del = (id: string) => {
-        const updated = data.filter(f => f.id !== id);
-        setData(updated); saveLS('admin_faculty', updated);
-        toast.success('Faculty removed'); setDeleteId(null);
+    const del = async (id: string) => {
+        try { await apiReq(`/faculty/${id}`, 'DELETE'); toast.success('Faculty removed'); setDeleteId(null); load(); }
+        catch (e: any) { toast.error(e.message || 'Error deleting faculty'); }
     };
 
     return (
@@ -112,43 +104,45 @@ function FacultyModule() {
                 <button onClick={() => { setEditing(BLANK_FACULTY); setModal('add'); }} className="btn-primary text-sm !py-2 !px-4"><FiPlus /> Add Faculty</button>
             </div>
 
-            <div className="glass-card overflow-hidden">
-                <table className="w-full text-sm">
-                    <thead><tr className="border-b border-white/10">
-                        <th className="text-left p-4 text-white/40 font-medium">Name</th>
-                        <th className="text-left p-4 text-white/40 font-medium hidden md:table-cell">Designation</th>
-                        <th className="text-left p-4 text-white/40 font-medium hidden lg:table-cell">Specialization</th>
-                        <th className="text-left p-4 text-white/40 font-medium hidden lg:table-cell">Exp. (Yrs)</th>
-                        <th className="text-right p-4 text-white/40 font-medium">Actions</th>
-                    </tr></thead>
-                    <tbody>
-                        {data.map(f => (
-                            <tr key={f.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                                <td className="p-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                            {f.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+            {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-cyber/30 border-t-cyber rounded-full animate-spin" /></div> : (
+                <div className="glass-card overflow-hidden">
+                    <table className="w-full text-sm">
+                        <thead><tr className="border-b border-white/10">
+                            <th className="text-left p-4 text-white/40 font-medium">Name</th>
+                            <th className="text-left p-4 text-white/40 font-medium hidden md:table-cell">Designation</th>
+                            <th className="text-left p-4 text-white/40 font-medium hidden lg:table-cell">Specialization</th>
+                            <th className="text-left p-4 text-white/40 font-medium hidden lg:table-cell">Exp. (Yrs)</th>
+                            <th className="text-right p-4 text-white/40 font-medium">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                            {data.map(f => (
+                                <tr key={f._id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                                    <td className="p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                                {f.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                                            </div>
+                                            <div><div className="text-white font-medium">{f.name}</div><div className="text-xs text-white/35">{f.email}</div></div>
                                         </div>
-                                        <div><div className="text-white font-medium">{f.name}</div><div className="text-xs text-white/35">{f.email}</div></div>
-                                    </div>
-                                </td>
-                                <td className="p-4 text-white/55 hidden md:table-cell">{f.designation}</td>
-                                <td className="p-4 hidden lg:table-cell"><span className="badge bg-primary-500/20 text-primary-300 text-xs">{f.specialization}</span></td>
-                                <td className="p-4 text-white/55 hidden lg:table-cell">{f.experience}</td>
-                                <td className="p-4">
-                                    <div className="flex justify-end gap-2">
-                                        <button onClick={() => { setEditing(f); setModal('edit'); }}
-                                            className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
-                                        <button onClick={() => setDeleteId(f.id)}
-                                            className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm">No faculty yet — click Add Faculty</div>}
-            </div>
+                                    </td>
+                                    <td className="p-4 text-white/55 hidden md:table-cell">{f.designation}</td>
+                                    <td className="p-4 hidden lg:table-cell"><span className="badge bg-primary-500/20 text-primary-300 text-xs">{f.specialization}</span></td>
+                                    <td className="p-4 text-white/55 hidden lg:table-cell">{f.experience}</td>
+                                    <td className="p-4">
+                                        <div className="flex justify-end gap-2">
+                                            <button onClick={() => { setEditing({ ...f, researchAreas: Array.isArray(f.researchAreas) ? f.researchAreas.join(', ') : f.researchAreas || '' }); setModal('edit'); }}
+                                                className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
+                                            <button onClick={() => setDeleteId(f._id!)}
+                                                className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm">No faculty yet — click Add Faculty</div>}
+                </div>
+            )}
 
             {/* Add/Edit Modal */}
             <AnimatePresence>
@@ -187,7 +181,7 @@ function FacultyModule() {
 }
 
 // ─── NOTICES MODULE ───────────────────────────────────────────────────────────
-const BLANK_NOTICE: Notice = { id: '', title: '', category: 'General', description: '', date: new Date().toISOString().split('T')[0], important: false };
+const BLANK_NOTICE: Notice = { title: '', category: 'General', description: '', date: new Date().toISOString().split('T')[0], important: false };
 const NOTICE_CATS = ['General', 'Exam', 'Event', 'Scholarship', 'Holiday', 'Placement', 'Result'];
 const catColors: Record<string, string> = { Exam: 'bg-red-500/20 text-red-300', Event: 'bg-blue-500/20 text-blue-300', Scholarship: 'bg-yellow-500/20 text-yellow-300', Holiday: 'bg-green-500/20 text-green-300', Placement: 'bg-purple-500/20 text-purple-300', Result: 'bg-orange-500/20 text-orange-300', General: 'bg-white/10 text-white/50' };
 
@@ -196,26 +190,28 @@ function NoticesModule() {
     const [modal, setModal] = useState<'add' | 'edit' | null>(null);
     const [editing, setEditing] = useState<Notice>(BLANK_NOTICE);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => { setData(loadLS('admin_notices', SEED_NOTICES)); }, []);
+    useEffect(() => { load(); }, []);
 
-    const save = () => {
+    async function load() {
+        setLoading(true);
+        try { const r = await apiReq('/notices'); setData(r.data || []); } catch { toast.error('Failed to load'); }
+        finally { setLoading(false); }
+    }
+
+    const save = async () => {
         if (!editing.title.trim()) { toast.error('Title is required'); return; }
-        let updated: Notice[];
-        if (modal === 'add') {
-            updated = [{ ...editing, id: Date.now().toString() }, ...data];
-            toast.success('Notice published!');
-        } else {
-            updated = data.map(n => n.id === editing.id ? editing : n);
-            toast.success('Notice updated!');
-        }
-        setData(updated); saveLS('admin_notices', updated); setModal(null);
+        try {
+            if (modal === 'add') { await apiReq('/notices', 'POST', editing); toast.success('Notice published!'); }
+            else { await apiReq(`/notices/${editing._id}`, 'PUT', editing); toast.success('Notice updated!'); }
+            setModal(null); load();
+        } catch (e: any) { toast.error(e.message || 'Error saving notice'); }
     };
 
-    const del = (id: string) => {
-        const updated = data.filter(n => n.id !== id);
-        setData(updated); saveLS('admin_notices', updated);
-        toast.success('Notice deleted'); setDeleteId(null);
+    const del = async (id: string) => {
+        try { await apiReq(`/notices/${id}`, 'DELETE'); toast.success('Notice deleted'); setDeleteId(null); load(); }
+        catch (e: any) { toast.error(e.message || 'Error deleting notice'); }
     };
 
     return (
@@ -225,28 +221,30 @@ function NoticesModule() {
                 <button onClick={() => { setEditing({ ...BLANK_NOTICE, date: new Date().toISOString().split('T')[0] }); setModal('add'); }} className="btn-primary text-sm !py-2 !px-4"><FiPlus /> Add Notice</button>
             </div>
 
-            <div className="space-y-3">
-                {data.map(n => (
-                    <div key={n.id} className="glass-card p-4 flex items-start gap-4 hover:border-primary-500/20 transition-all">
-                        <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-1">
-                                <span className={`badge text-xs ${catColors[n.category] || catColors.General}`}>{n.category}</span>
-                                {n.important && <span className="badge bg-red-500/20 text-red-300 text-xs">⚠ Important</span>}
+            {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-cyber/30 border-t-cyber rounded-full animate-spin" /></div> : (
+                <div className="space-y-3">
+                    {data.map(n => (
+                        <div key={n._id} className="glass-card p-4 flex items-start gap-4 hover:border-primary-500/20 transition-all">
+                            <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                    <span className={`badge text-xs ${catColors[n.category] || catColors.General}`}>{n.category}</span>
+                                    {n.important && <span className="badge bg-red-500/20 text-red-300 text-xs">⚠ Important</span>}
+                                </div>
+                                <div className="font-medium text-white text-sm">{n.title}</div>
+                                <div className="text-xs text-white/35 mt-1">{n.description.slice(0, 100)}{n.description.length > 100 ? '…' : ''}</div>
+                                <div className="text-xs text-white/25 mt-1">📅 {n.date}</div>
                             </div>
-                            <div className="font-medium text-white text-sm">{n.title}</div>
-                            <div className="text-xs text-white/35 mt-1">{n.description.slice(0, 100)}{n.description.length > 100 ? '…' : ''}</div>
-                            <div className="text-xs text-white/25 mt-1">📅 {n.date}</div>
+                            <div className="flex gap-1.5 flex-shrink-0">
+                                <button onClick={() => { setEditing(n); setModal('edit'); }}
+                                    className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
+                                <button onClick={() => setDeleteId(n._id!)}
+                                    className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
+                            </div>
                         </div>
-                        <div className="flex gap-1.5 flex-shrink-0">
-                            <button onClick={() => { setEditing(n); setModal('edit'); }}
-                                className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
-                            <button onClick={() => setDeleteId(n.id)}
-                                className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
-                        </div>
-                    </div>
-                ))}
-                {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm glass-card">No notices yet — click Add Notice</div>}
-            </div>
+                    ))}
+                    {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm glass-card">No notices yet — click Add Notice</div>}
+                </div>
+            )}
 
             <AnimatePresence>
                 {modal && (
@@ -289,7 +287,7 @@ function NoticesModule() {
 }
 
 // ─── EVENTS MODULE ────────────────────────────────────────────────────────────
-const BLANK_EVENT: Event = { id: '', title: '', category: 'Technical', date: new Date().toISOString().split('T')[0], venue: '', description: '' };
+const BLANK_EVENT: Event = { title: '', category: 'Technical', date: new Date().toISOString().split('T')[0], venue: '', description: '', images: [] };
 const EVENT_CATS = ['Technical', 'Hackathon', 'Lecture', 'Workshop', 'Cultural', 'Sports', 'Seminar'];
 
 function EventsModule() {
@@ -297,26 +295,28 @@ function EventsModule() {
     const [modal, setModal] = useState<'add' | 'edit' | null>(null);
     const [editing, setEditing] = useState<Event>(BLANK_EVENT);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => { setData(loadLS('admin_events', SEED_EVENTS)); }, []);
+    useEffect(() => { load(); }, []);
 
-    const save = () => {
+    async function load() {
+        setLoading(true);
+        try { const r = await apiReq('/events'); setData(r.data || []); } catch { toast.error('Failed to load'); }
+        finally { setLoading(false); }
+    }
+
+    const save = async () => {
         if (!editing.title.trim()) { toast.error('Title is required'); return; }
-        let updated: Event[];
-        if (modal === 'add') {
-            updated = [{ ...editing, id: Date.now().toString() }, ...data];
-            toast.success('Event created!');
-        } else {
-            updated = data.map(e => e.id === editing.id ? editing : e);
-            toast.success('Event updated!');
-        }
-        setData(updated); saveLS('admin_events', updated); setModal(null);
+        try {
+            if (modal === 'add') { await apiReq('/events', 'POST', editing); toast.success('Event created!'); }
+            else { await apiReq(`/events/${editing._id}`, 'PUT', editing); toast.success('Event updated!'); }
+            setModal(null); load();
+        } catch (e: any) { toast.error(e.message || 'Error saving event'); }
     };
 
-    const del = (id: string) => {
-        const updated = data.filter(e => e.id !== id);
-        setData(updated); saveLS('admin_events', updated);
-        toast.success('Event removed'); setDeleteId(null);
+    const del = async (id: string) => {
+        try { await apiReq(`/events/${id}`, 'DELETE'); toast.success('Event removed'); setDeleteId(null); load(); }
+        catch (e: any) { toast.error(e.message || 'Error deleting event'); }
     };
 
     return (
@@ -326,27 +326,29 @@ function EventsModule() {
                 <button onClick={() => { setEditing({ ...BLANK_EVENT, date: new Date().toISOString().split('T')[0] }); setModal('add'); }} className="btn-primary text-sm !py-2 !px-4"><FiPlus /> Add Event</button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-                {data.map(ev => (
-                    <div key={ev.id} className="glass-card p-5 hover:border-primary-500/20 transition-all group">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                                <span className="badge bg-primary-500/20 text-primary-300 text-xs mb-2">{ev.category}</span>
-                                <h3 className="font-semibold text-white text-sm mb-1">{ev.title}</h3>
-                                <div className="text-xs text-white/35">📅 {ev.date} &nbsp;|&nbsp; 📍 {ev.venue}</div>
-                                <p className="text-xs text-white/40 mt-2 leading-relaxed">{ev.description.slice(0, 80)}{ev.description.length > 80 ? '…' : ''}</p>
-                            </div>
-                            <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => { setEditing(ev); setModal('edit'); }}
-                                    className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
-                                <button onClick={() => setDeleteId(ev.id)}
-                                    className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
+            {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-cyber/30 border-t-cyber rounded-full animate-spin" /></div> : (
+                <div className="grid md:grid-cols-2 gap-4">
+                    {data.map(ev => (
+                        <div key={ev._id} className="glass-card p-5 hover:border-primary-500/20 transition-all group">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1">
+                                    <span className="badge bg-primary-500/20 text-primary-300 text-xs mb-2">{ev.category}</span>
+                                    <h3 className="font-semibold text-white text-sm mb-1">{ev.title}</h3>
+                                    <div className="text-xs text-white/35">📅 {ev.date} &nbsp;|&nbsp; 📍 {ev.venue}</div>
+                                    <p className="text-xs text-white/40 mt-2 leading-relaxed">{ev.description.slice(0, 80)}{ev.description.length > 80 ? '…' : ''}</p>
+                                </div>
+                                <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => { setEditing(ev); setModal('edit'); }}
+                                        className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
+                                    <button onClick={() => setDeleteId(ev._id!)}
+                                        className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-                {data.length === 0 && <div className="col-span-2 text-center py-12 text-white/25 text-sm glass-card">No events yet — click Add Event</div>}
-            </div>
+                    ))}
+                    {data.length === 0 && <div className="col-span-2 text-center py-12 text-white/25 text-sm glass-card">No events yet — click Add Event</div>}
+                </div>
+            )}
 
             <AnimatePresence>
                 {modal && (
@@ -383,33 +385,36 @@ function EventsModule() {
 }
 
 // ─── PLACEMENTS MODULE ────────────────────────────────────────────────────────
-const BLANK_PLACEMENT: Placement = { id: '', year: new Date().getFullYear(), placed: 0, total: 60, highest: 0, average: 0, companies: '' };
+const BLANK_PLACEMENT: Placement = { year: new Date().getFullYear(), placed: 0, total: 60, highest: 0, average: 0, companies: '' };
 
 function PlacementsModule() {
     const [data, setData] = useState<Placement[]>([]);
     const [modal, setModal] = useState<'add' | 'edit' | null>(null);
     const [editing, setEditing] = useState<Placement>(BLANK_PLACEMENT);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => { setData(loadLS('admin_placements', SEED_PLACEMENTS)); }, []);
+    useEffect(() => { load(); }, []);
 
-    const save = () => {
+    async function load() {
+        setLoading(true);
+        try { const r = await apiReq('/placements'); setData(r.data || []); } catch { toast.error('Failed to load'); }
+        finally { setLoading(false); }
+    }
+
+    const save = async () => {
         if (!editing.year) { toast.error('Year is required'); return; }
-        let updated: Placement[];
-        if (modal === 'add') {
-            updated = [{ ...editing, id: Date.now().toString() }, ...data];
-            toast.success('Placement record added!');
-        } else {
-            updated = data.map(p => p.id === editing.id ? editing : p);
-            toast.success('Placement updated!');
-        }
-        setData(updated); saveLS('admin_placements', updated); setModal(null);
+        try {
+            const payload = { ...editing, companies: typeof editing.companies === 'string' ? editing.companies.split(',').map(s => s.trim()).filter(Boolean) : editing.companies };
+            if (modal === 'add') { await apiReq('/placements', 'POST', payload); toast.success('Placement record added!'); }
+            else { await apiReq(`/placements/${editing._id}`, 'PUT', payload); toast.success('Placement updated!'); }
+            setModal(null); load();
+        } catch (e: any) { toast.error(e.message || 'Error saving placement'); }
     };
 
-    const del = (id: string) => {
-        const updated = data.filter(p => p.id !== id);
-        setData(updated); saveLS('admin_placements', updated);
-        toast.success('Record deleted'); setDeleteId(null);
+    const del = async (id: string) => {
+        try { await apiReq(`/placements/${id}`, 'DELETE'); toast.success('Record deleted'); setDeleteId(null); load(); }
+        catch (e: any) { toast.error(e.message || 'Error deleting placement'); }
     };
 
     return (
@@ -419,37 +424,39 @@ function PlacementsModule() {
                 <button onClick={() => { setEditing(BLANK_PLACEMENT); setModal('add'); }} className="btn-primary text-sm !py-2 !px-4"><FiPlus /> Add Year</button>
             </div>
 
-            <div className="glass-card overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead><tr className="border-b border-white/10">
-                        {['Year', 'Total', 'Placed', 'Rate', 'Highest (LPA)', 'Avg (LPA)', 'Top Companies', ''].map(h => (
-                            <th key={h} className="text-left p-4 text-white/40 font-medium whitespace-nowrap">{h}</th>
-                        ))}
-                    </tr></thead>
-                    <tbody>
-                        {[...data].sort((a, b) => b.year - a.year).map(p => (
-                            <tr key={p.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                                <td className="p-4 font-bold text-white">{p.year}</td>
-                                <td className="p-4 text-white/55">{p.total}</td>
-                                <td className="p-4 text-white/55">{p.placed}</td>
-                                <td className="p-4"><span className="badge bg-accent-500/20 text-accent-400 text-xs">{Math.round((p.placed / p.total) * 100)}%</span></td>
-                                <td className="p-4 text-yellow-400 font-semibold">{p.highest} LPA</td>
-                                <td className="p-4 text-primary-400 font-semibold">{p.average} LPA</td>
-                                <td className="p-4 text-white/40 max-w-[180px] truncate">{p.companies}</td>
-                                <td className="p-4">
-                                    <div className="flex gap-1.5">
-                                        <button onClick={() => { setEditing(p); setModal('edit'); }}
-                                            className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
-                                        <button onClick={() => setDeleteId(p.id)}
-                                            className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm">No records yet</div>}
-            </div>
+            {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-cyber/30 border-t-cyber rounded-full animate-spin" /></div> : (
+                <div className="glass-card overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead><tr className="border-b border-white/10">
+                            {['Year', 'Total', 'Placed', 'Rate', 'Highest (LPA)', 'Avg (LPA)', 'Top Companies', ''].map(h => (
+                                <th key={h} className="text-left p-4 text-white/40 font-medium whitespace-nowrap">{h}</th>
+                            ))}
+                        </tr></thead>
+                        <tbody>
+                            {[...data].sort((a, b) => b.year - a.year).map(p => (
+                                <tr key={p._id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                                    <td className="p-4 font-bold text-white">{p.year}</td>
+                                    <td className="p-4 text-white/55">{p.total}</td>
+                                    <td className="p-4 text-white/55">{p.placed}</td>
+                                    <td className="p-4"><span className="badge bg-accent-500/20 text-accent-400 text-xs">{Math.round((p.placed / p.total) * 100)}%</span></td>
+                                    <td className="p-4 text-yellow-400 font-semibold">{p.highest} LPA</td>
+                                    <td className="p-4 text-primary-400 font-semibold">{p.average} LPA</td>
+                                    <td className="p-4 text-white/40 max-w-[180px] truncate">{Array.isArray(p.companies) ? p.companies.join(', ') : p.companies}</td>
+                                    <td className="p-4">
+                                        <div className="flex gap-1.5">
+                                            <button onClick={() => { setEditing({ ...p, companies: Array.isArray(p.companies) ? p.companies.join(', ') : p.companies || '' }); setModal('edit'); }}
+                                                className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
+                                            <button onClick={() => setDeleteId(p._id!)}
+                                                className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm">No records yet</div>}
+                </div>
+            )}
 
             <AnimatePresence>
                 {modal && (
@@ -487,13 +494,30 @@ function PlacementsModule() {
 // ─── OVERVIEW ─────────────────────────────────────────────────────────────────
 function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
     const [counts, setCounts] = useState({ faculty: 0, notices: 0, events: 0, placements: 0 });
+    const [loading, setLoading] = useState(true);
     useEffect(() => {
-        setCounts({
-            faculty: loadLS('admin_faculty', SEED_FACULTY).length,
-            notices: loadLS('admin_notices', SEED_NOTICES).length,
-            events: loadLS('admin_events', SEED_EVENTS).length,
-            placements: loadLS('admin_placements', SEED_PLACEMENTS).length,
-        });
+        const fetchCounts = async () => {
+            setLoading(true);
+            try {
+                const [f, n, e, p] = await Promise.all([
+                    apiReq('/faculty'),
+                    apiReq('/notices'),
+                    apiReq('/events'),
+                    apiReq('/placements')
+                ]);
+                setCounts({
+                    faculty: f.data?.length || 0,
+                    notices: n.data?.length || 0,
+                    events: e.data?.length || 0,
+                    placements: p.data?.length || 0
+                });
+            } catch {
+                console.error("Failed to fetch dashboard counts");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCounts();
     }, []);
 
     return (
@@ -511,7 +535,7 @@ function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
                         className="glass-card p-5 cursor-pointer hover:border-primary-500/30 transition-all">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-2xl">{k.icon}</span>
-                            <span className={`text-3xl font-bold ${k.color}`}>{k.value}</span>
+                            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <span className={`text-3xl font-bold ${k.color}`}>{k.value}</span>}
                         </div>
                         <div className="text-sm text-white/45">{k.label}</div>
                         <div className="text-xs text-white/20 flex items-center gap-1 mt-1">Click to manage →</div>
@@ -539,9 +563,9 @@ function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
 
             <div className="glass-card p-5 mt-5">
                 <h3 className="font-semibold text-white text-sm mb-4">Data Storage</h3>
-                <p className="text-xs text-white/40 mb-3">All changes are saved to your browser&apos;s localStorage instantly. Connect the backend to persist data in MongoDB.</p>
+                <p className="text-xs text-white/40 mb-3">All changes are pushed directly to MongoDB via the connected backend.</p>
                 <div className="flex items-center gap-2 text-xs text-accent-400 font-medium">
-                    <FiCheckCircle className="w-4 h-4" /> Auto-save enabled (localStorage)
+                    <FiCheckCircle className="w-4 h-4" /> Live Backend Connected
                 </div>
             </div>
         </div>
@@ -640,8 +664,13 @@ function LoginScreen({ onLogin }: { onLogin: (u: AdminUser) => void }) {
 const navItems = [
     { key: 'overview', icon: <FiTrendingUp />, label: 'Overview' },
     { key: 'faculty', icon: <FiUsers />, label: 'Faculty' },
+    { key: 'research', icon: <FiZap />, label: 'Research' },
+    { key: 'publications', icon: <FiBook />, label: 'Publications' },
+    { key: 'labs', icon: <FiCpu />, label: 'Laboratories' },
+    { key: 'achievements', icon: <FiAward />, label: 'Achievements' },
+    { key: 'gallery', icon: <FiImage />, label: 'Gallery' },
     { key: 'notices', icon: <FiBell />, label: 'Notices' },
-    { key: 'events', icon: <FiImage />, label: 'Events' },
+    { key: 'events', icon: <FiPackage />, label: 'Events' },
     { key: 'placements', icon: <FiBook />, label: 'Placements' },
 ];
 
@@ -690,7 +719,7 @@ function AdminShell({ user, onLogout }: { user: AdminUser; onLogout: () => void 
                     </button>
                     <div className="text-sm text-white/40 capitalize">{navItems.find(n => n.key === tab)?.label}</div>
                     <div className="ml-auto text-xs text-accent-400 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-accent-400 animate-pulse" /> Auto-save ON
+                        <span className="w-2 h-2 rounded-full bg-accent-400 animate-pulse" /> Live DB Connection
                     </div>
                 </header>
 
@@ -700,6 +729,11 @@ function AdminShell({ user, onLogout }: { user: AdminUser; onLogout: () => void 
                             exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
                             {tab === 'overview' && <OverviewTab setTab={setTab} />}
                             {tab === 'faculty' && <FacultyModule />}
+                            {tab === 'research' && <ResearchModule />}
+                            {tab === 'publications' && <PublicationsModule />}
+                            {tab === 'labs' && <LabsModule />}
+                            {tab === 'achievements' && <AchievementsModule />}
+                            {tab === 'gallery' && <GalleryModule />}
                             {tab === 'notices' && <NoticesModule />}
                             {tab === 'events' && <EventsModule />}
                             {tab === 'placements' && <PlacementsModule />}
