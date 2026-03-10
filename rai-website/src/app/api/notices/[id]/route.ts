@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import connectDB from '@/lib/db';
+import { connectDB } from '@/lib/db';
 import NoticeModel from '@/models/Notice';
 import { getAuthUser, unauthorizedResponse } from '@/lib/auth';
 

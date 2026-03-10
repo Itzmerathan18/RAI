@@ -1,40 +1,80 @@
-import { NextRequest } from 'next/server';
-import connectDB from '@/lib/db';
-import ProjectModel from '@/models/Project';
-import { getAuthUser, unauthorizedResponse } from '@/lib/auth';
+import { connectDB } from "@/lib/db";
+import Project from "@/models/Project";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
-export const dynamic = 'force-dynamic';
-
-export async function GET(req: NextRequest) {
-    try {
-        await connectDB();
-        const { searchParams } = new URL(req.url);
-        const filter: Record<string, unknown> = {};
-        const domain = searchParams.get('domain');
-        if (domain) filter.domain = domain;
-        const year = searchParams.get('year');
-        if (year) filter.year = parseInt(year);
-        const published = searchParams.get('published');
-        if (published === 'true') filter.published = true;
-
-        const data = await ProjectModel.find(filter).sort({ year: -1, createdAt: -1 });
-        return Response.json({ success: true, count: data.length, data });
-    } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Server error';
-        return Response.json({ success: false, data: [], message }, { status: 500 });
-    }
+export async function GET() {
+  try {
+    await connectDB();
+    const projects = await Project.find().sort({ createdAt: -1 });
+    return NextResponse.json(projects);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch projects" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
-    const user = getAuthUser(req);
-    if (!user) return unauthorizedResponse();
-    try {
-        await connectDB();
-        const body = await req.json();
-        const doc = await ProjectModel.create(body);
-        return Response.json({ success: true, data: doc }, { status: 201 });
-    } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Server error';
-        return Response.json({ success: false, message }, { status: 400 });
-    }
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const body = await req.json();
+    const project = await Project.create(body);
+    return NextResponse.json(project, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create project" },
+      { status: 500 }
+    );
+  }
 }
+
+export async function PUT(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const { id, ...data } = await req.json();
+    const project = await Project.findByIdAndUpdate(id, data, { new: true });
+    if (!project) {
+      return NextResponse.json(
+        { error: "Project not found" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(project);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update project" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID is required" },
+        { status: 400 }
+      );
+    }
+    await Project.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Deleted successfully" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete project" },
+      { status: 500 }
+    );
+  }
+}
+
+

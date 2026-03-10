@@ -1,34 +1,34 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
+const MONGODB_URI = process.env.MONGODB_URI!;
 
 if (!MONGODB_URI) {
-    console.warn('⚠️  MONGODB_URI not set in .env.local');
+  throw new Error("MONGODB_URI is not defined");
 }
 
-// Use a global cache to avoid multiple connections during hot-reload in dev
-declare global {
-    // eslint-disable-next-line no-var
-    var _mongoose: { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null };
-}
+let cached = (global as any).mongoose || { conn: null, promise: null };
 
-let cached = global._mongoose;
-
-if (!cached) {
-    cached = global._mongoose = { conn: null, promise: null };
+if (!(global as any).mongoose) {
+  (global as any).mongoose = cached;
 }
 
 export async function connectDB() {
-    if (cached.conn) return cached.conn;
+  if (cached.conn) return cached.conn;
 
-    if (!cached.promise) {
-        cached.promise = mongoose.connect(MONGODB_URI, {
-            bufferCommands: false,
-        });
-    }
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(MONGODB_URI, {
+        dbName: "rai_website",
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 10000,
+      })
+      .catch((err) => {
+        // Reset so the next call retries instead of reusing the rejected promise
+        cached.promise = null;
+        throw err;
+      });
+  }
 
-    cached.conn = await cached.promise;
-    return cached.conn;
+  cached.conn = await cached.promise;
+  return cached.conn;
 }
-
-export default connectDB;

@@ -1,38 +1,80 @@
-import { NextRequest } from 'next/server';
-import connectDB from '@/lib/db';
-import NoticeModel from '@/models/Notice';
-import { getAuthUser, unauthorizedResponse } from '@/lib/auth';
+import { connectDB } from "@/lib/db";
+import Notice from "@/models/Notice";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
-export const dynamic = 'force-dynamic';
-
-export async function GET(req: NextRequest) {
-    try {
-        await connectDB();
-        const { searchParams } = new URL(req.url);
-        const filter: Record<string, unknown> = {};
-        const category = searchParams.get('category');
-        if (category) filter.category = category;
-        const isActive = searchParams.get('isActive');
-        if (isActive !== null) filter.isActive = isActive === 'true';
-
-        const data = await NoticeModel.find(filter).sort({ createdAt: -1 });
-        return Response.json({ success: true, count: data.length, data });
-    } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Server error';
-        return Response.json({ success: false, data: [], message }, { status: 500 });
-    }
+export async function GET() {
+  try {
+    await connectDB();
+    const notices = await Notice.find().sort({ date: -1 });
+    return NextResponse.json(notices);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch notices" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
-    const user = getAuthUser(req);
-    if (!user) return unauthorizedResponse();
-    try {
-        await connectDB();
-        const body = await req.json();
-        const doc = await NoticeModel.create(body);
-        return Response.json({ success: true, data: doc }, { status: 201 });
-    } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Server error';
-        return Response.json({ success: false, message }, { status: 400 });
-    }
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const body = await req.json();
+    const notice = await Notice.create(body);
+    return NextResponse.json(notice, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create notice" },
+      { status: 500 }
+    );
+  }
 }
+
+export async function PUT(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const { id, ...data } = await req.json();
+    const notice = await Notice.findByIdAndUpdate(id, data, { new: true });
+    if (!notice) {
+      return NextResponse.json(
+        { error: "Notice not found" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(notice);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update notice" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID is required" },
+        { status: 400 }
+      );
+    }
+    await Notice.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Deleted successfully" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete notice" },
+      { status: 500 }
+    );
+  }
+}
+
+

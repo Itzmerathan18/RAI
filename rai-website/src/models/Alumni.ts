@@ -1,25 +1,10 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from "mongoose";
 
-export interface IAlumni extends Document {
-    name: string;
-    organization: string;
-    role: string;
-    year: number;
-    photo: string;
-    linkedinUrl: string;
-    batch: string;
-    createdAt: Date;
-}
-
-const AlumniSchema = new Schema<IAlumni>({
-    name: { type: String, required: true },
-    organization: { type: String, default: '' },
-    role: { type: String, default: '' },
-    year: { type: Number, required: true },
-    photo: { type: String, default: '/images/default-avatar.png' },
-    linkedinUrl: { type: String, default: '' },
-    batch: { type: String, default: '' },
-    createdAt: { type: Date, default: Date.now },
+const AlumniSchema = new mongoose.Schema({
+  name: String,
+  organization: String,
+  role: String,
+  year: Number,
 });
 
-export default mongoose.models.Alumni || mongoose.model<IAlumni>('Alumni', AlumniSchema);
+export default mongoose.models.Alumni || mongoose.model("Alumni", AlumniSchema);

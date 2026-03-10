@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
         // ── Try DB-backed login first ──────────────────────────────────────────
         try {
-            const { default: connectDB } = await import('@/lib/db');
+            const { connectDB } = await import('@/lib/db');
             const { default: User } = await import('@/models/User');
             await connectDB();
 

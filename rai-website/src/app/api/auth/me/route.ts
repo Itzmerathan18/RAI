@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import connectDB from '@/lib/db';
+import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 import { getAuthUser } from '@/lib/auth';
 
@@ -27,3 +27,4 @@ export async function GET(req: NextRequest) {
         return Response.json({ success: false, message }, { status: 500 });
     }
 }
+

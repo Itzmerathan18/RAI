@@ -1,38 +1,80 @@
-import { NextRequest } from 'next/server';
-import connectDB from '@/lib/db';
-import GalleryModel from '@/models/Gallery';
-import { getAuthUser, unauthorizedResponse } from '@/lib/auth';
+import { connectDB } from "@/lib/db";
+import Gallery from "@/models/Gallery";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
-export const dynamic = 'force-dynamic';
-
-export async function GET(req: NextRequest) {
-    try {
-        await connectDB();
-        const { searchParams } = new URL(req.url);
-        const filter: Record<string, unknown> = {};
-        const category = searchParams.get('category');
-        if (category) filter.category = category;
-        const published = searchParams.get('published');
-        if (published === 'true') filter.published = true;
-
-        const data = await GalleryModel.find(filter).sort({ date: -1, createdAt: -1 });
-        return Response.json({ success: true, count: data.length, data });
-    } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Server error';
-        return Response.json({ success: false, data: [], message }, { status: 500 });
-    }
+export async function GET() {
+  try {
+    await connectDB();
+    const gallery = await Gallery.find().sort({ eventDate: -1 });
+    return NextResponse.json(gallery);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch gallery" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
-    const user = getAuthUser(req);
-    if (!user) return unauthorizedResponse();
-    try {
-        await connectDB();
-        const body = await req.json();
-        const doc = await GalleryModel.create(body);
-        return Response.json({ success: true, data: doc }, { status: 201 });
-    } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Server error';
-        return Response.json({ success: false, message }, { status: 400 });
-    }
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const body = await req.json();
+    const item = await Gallery.create(body);
+    return NextResponse.json(item, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create gallery item" },
+      { status: 500 }
+    );
+  }
 }
+
+export async function PUT(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const { id, ...data } = await req.json();
+    const item = await Gallery.findByIdAndUpdate(id, data, { new: true });
+    if (!item) {
+      return NextResponse.json(
+        { error: "Gallery item not found" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(item);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update gallery item" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID is required" },
+        { status: 400 }
+      );
+    }
+    await Gallery.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Deleted successfully" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete gallery item" },
+      { status: 500 }
+    );
+  }
+}
+
+

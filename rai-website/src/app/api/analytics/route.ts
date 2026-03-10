@@ -1,4 +1,4 @@
-import connectDB from '@/lib/db';
+import { connectDB } from '@/lib/db';
 import FacultyModel from '@/models/Faculty';
 import ResearchModel from '@/models/Research';
 import PublicationModel from '@/models/Publication';

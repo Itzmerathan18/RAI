@@ -1,27 +1,22 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from "mongoose";
 
-export interface INotice extends Document {
-    title: string;
-    description: string;
-    date: string;
-    documentUrl: string;
-    category: string;
-    isActive: boolean;
-    createdAt: Date;
-}
-
-const NoticeSchema = new Schema<INotice>({
+const NoticeSchema = new mongoose.Schema(
+  {
     title: { type: String, required: true },
-    description: { type: String, default: '' },
-    date: { type: String, default: '' },
-    documentUrl: { type: String, default: '' },
+    description: { type: String, default: "" },
+    date: { type: Date, default: Date.now },
     category: {
-        type: String,
-        enum: ['circular', 'notice', 'exam', 'event', 'other'],
-        default: 'notice',
+      type: String,
+      enum: ["General", "Exam", "Event", "Scholarship", "Holiday", "Placement", "Result"],
+      default: "General",
     },
+    important: { type: Boolean, default: false },
+    link: { type: String, default: "" },
+    // legacy field kept for backward compat
+    documentUrl: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-});
+  },
+  { timestamps: true }
+);
 
-export default mongoose.models.Notice || mongoose.model<INotice>('Notice', NoticeSchema);
+export default mongoose.models.Notice || mongoose.model("Notice", NoticeSchema);

@@ -1,38 +1,79 @@
-import { NextRequest } from 'next/server';
-import connectDB from '@/lib/db';
-import FacultyModel from '@/models/Faculty';
-import { getAuthUser, unauthorizedResponse } from '@/lib/auth';
+import { connectDB } from "@/lib/db";
+import Faculty from "@/models/Faculty";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
-export const dynamic = 'force-dynamic';
-
-export async function GET(req: NextRequest) {
-    try {
-        await connectDB();
-        const { searchParams } = new URL(req.url);
-        const filter: Record<string, unknown> = {};
-        const specialization = searchParams.get('specialization');
-        if (specialization) filter.specialization = specialization;
-        const isSupportStaff = searchParams.get('isSupportStaff');
-        if (isSupportStaff !== null) filter.isSupportStaff = isSupportStaff === 'true';
-
-        const data = await FacultyModel.find(filter).sort({ name: 1 });
-        return Response.json({ success: true, count: data.length, data });
-    } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Server error';
-        return Response.json({ success: false, data: [], message }, { status: 500 });
-    }
+export async function GET() {
+  try {
+    await connectDB();
+    const faculty = await Faculty.find().sort({ createdAt: -1 });
+    return NextResponse.json(faculty);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch faculty" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
-    const user = getAuthUser(req);
-    if (!user) return unauthorizedResponse();
-    try {
-        await connectDB();
-        const body = await req.json();
-        const doc = await FacultyModel.create(body);
-        return Response.json({ success: true, data: doc }, { status: 201 });
-    } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Server error';
-        return Response.json({ success: false, message }, { status: 400 });
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const body = await req.json();
+    const faculty = await Faculty.create(body);
+    return NextResponse.json(faculty, { status: 201 });
+  } catch (error) {
+    console.error("DEBUG FACULTY POST ERROR:", error);
+    return NextResponse.json(
+      { error: "Failed to create faculty" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const { id, ...data } = await req.json();
+    const faculty = await Faculty.findByIdAndUpdate(id, data, { new: true });
+    if (!faculty) {
+      return NextResponse.json(
+        { error: "Faculty not found" },
+        { status: 404 }
+      );
     }
+    return NextResponse.json(faculty);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to update faculty" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID is required" },
+        { status: 400 }
+      );
+    }
+    await Faculty.findByIdAndDelete(id);
+    return NextResponse.json({ message: "Deleted successfully" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete faculty" },
+      { status: 500 }
+    );
+  }
 }
