@@ -173,9 +173,9 @@ export default function HomePage(){
             <Link href="/about" className="btn-secondary text-sm">Know More <FiArrowRight/></Link>
           </motion.div>
           <motion.div initial={{opacity:0,x:30}} whileInView={{opacity:1,x:0}} viewport={{once:true}} transition={{duration:0.6}} className="grid grid-cols-2 gap-3">
-            {['/images/jnnce-campus.jpeg','/images/rai-sign-entrance.jpeg','/images/rai-sign-corridor.png','/images/jnnce-campus.jpeg'].map((src,i)=>(
-              <div key={i} className="rounded-xl overflow-hidden border border-white/8 hover:border-cyan-500/30 transition-all aspect-video group">
-                <img src={src} alt="JNNCE" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"/>
+            {[{src:'/images/jnnce-campus.jpeg',id:'campus'},{src:'/images/rai-sign-entrance.jpeg',id:'entrance'},{src:'/images/rai-sign-corridor.png',id:'corridor'},{src:'/images/jnnce-campus.jpeg',id:'campus2'}].map((img)=>(
+              <div key={img.id} className="rounded-xl overflow-hidden border border-white/8 hover:border-cyan-500/30 transition-all aspect-video group">
+                <img src={img.src} alt="JNNCE" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"/>
               </div>
             ))}
           </motion.div>
@@ -215,10 +215,10 @@ export default function HomePage(){
                   <div className="font-orbitron text-xs text-cyan-400 uppercase tracking-widest">AI Powered</div>
                 </div>
               </div>
-              {[0,60,120,180,240,300].map((deg,i)=>(
-                <div key={i} className="absolute w-2 h-2 rounded-full bg-cyan-400" style={{
+              {[{deg:0,id:'joint-0'},{deg:60,id:'joint-1'},{deg:120,id:'joint-2'},{deg:180,id:'joint-3'},{deg:240,id:'joint-4'},{deg:300,id:'joint-5'}].map((joint,i)=>(
+                <div key={joint.id} className="absolute w-2 h-2 rounded-full bg-cyan-400" style={{
                   top:'50%',left:'50%',
-                  transform:`rotate(${deg}deg) translateX(130px) translateY(-4px)`,
+                  transform:`rotate(${joint.deg}deg) translateX(130px) translateY(-4px)`,
                   animation:`joint-pulse 2s ease-in-out ${i*0.3}s infinite`,
                   boxShadow:'0 0 8px #00E5FF'
                 }}/>
@@ -333,14 +333,14 @@ export default function HomePage(){
         </motion.div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-10">
           {[
-            {src:'/images/jnnce-campus.jpeg',span:'col-span-2 md:col-span-1',rows:''},
-            {src:'/images/rai-sign-entrance.jpeg',span:'',rows:''},
-            {src:'/images/rai-sign-corridor.png',span:'',rows:''},
-            {src:'/images/jnnce-campus.jpeg',span:'',rows:''},
-            {src:'/images/rai-sign-entrance.jpeg',span:'',rows:''},
-            {src:'/images/rai-sign-corridor.png',span:'col-span-2 md:col-span-1',rows:''},
+            {src:'/images/jnnce-campus.jpeg',span:'col-span-2 md:col-span-1',rows:'',id:'gal-1'},
+            {src:'/images/rai-sign-entrance.jpeg',span:'',rows:'',id:'gal-2'},
+            {src:'/images/rai-sign-corridor.png',span:'',rows:'',id:'gal-3'},
+            {src:'/images/jnnce-campus.jpeg',span:'',rows:'',id:'gal-4'},
+            {src:'/images/rai-sign-entrance.jpeg',span:'',rows:'',id:'gal-5'},
+            {src:'/images/rai-sign-corridor.png',span:'col-span-2 md:col-span-1',rows:'',id:'gal-6'},
           ].map((img,i)=>(
-            <motion.div key={i} initial={{opacity:0,scale:0.95}} whileInView={{opacity:1,scale:1}}
+            <motion.div key={img.id} initial={{opacity:0,scale:0.95}} whileInView={{opacity:1,scale:1}}
               transition={{delay:i*0.07}} viewport={{once:true}}
               className={`${img.span} rounded-xl overflow-hidden border border-white/8 hover:border-cyan-500/30 transition-all group aspect-video`}>
               <img src={img.src} alt={`Gallery ${i+1}`} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"/>
