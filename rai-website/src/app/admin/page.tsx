@@ -863,8 +863,6 @@ function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
 }
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
-const ADMIN_EMAIL = 'rai@jnnce.ac.in';
-const ADMIN_PASS = 'Rai@123';
 
 function LoginScreen({ onLogin }: { onLogin: (u: AdminUser) => void }) {
     const [form, setForm] = useState({ email: '', password: '' });
@@ -883,7 +881,7 @@ function LoginScreen({ onLogin }: { onLogin: (u: AdminUser) => void }) {
             onLogin(user);
             toast.success(`Welcome, ${user.name}!`);
         } catch {
-            setError('Invalid credentials. Use rai@jnnce.ac.in / Rai@123');
+            setError('Invalid credentials');
         } finally { setLoading(false); }
     };
 

@@ -100,5 +100,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 RAI JNNCE Backend running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     console.log(`📁 Using local JSON data store — no MongoDB required!`);
-    console.log(`🔑 Admin login: rai@jnnce.ac.in / Rai@123`);
+    console.log(`🔐 Admin login configured via environment variables.`);
 });
