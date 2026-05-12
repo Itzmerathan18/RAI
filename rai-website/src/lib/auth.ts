@@ -6,9 +6,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 
-// ── Hardcoded admin fallback credentials ──────────────────────────────────────
-export const ADMIN_EMAIL = "rai@jnnce.ac.in";
-export const ADMIN_PASSWORD = "rai#@123";
+// ── Admin credentials are configured via environment variables ───────────────
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "rai@jnnce.ac.in";
+export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Rai@123";
 
 const JWT_SECRET = process.env.JWT_SECRET || "rai_jnnce_secret_2024";
 
@@ -46,7 +46,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        // ── Hardcoded admin fallback (works even if MongoDB is unreachable) ─────
+        // ── Env-based admin fallback (works even if MongoDB is unreachable) ────
         if (
           credentials.email === ADMIN_EMAIL &&
           credentials.password === ADMIN_PASSWORD

@@ -1,20 +1,17 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-const ADMIN_EMAIL = 'rai@jnnce.ac.in';
-const ADMIN_PASS_HASH = bcrypt.hashSync('Rai@123', 10);
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'rai@jnnce.ac.in';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Rai@123';
 const JWT_SECRET = process.env.JWT_SECRET || 'rai_jnnce_secret_2024';
-const LOCAL_ADMIN_TOKEN = 'local_admin_token';
 
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required' });
         if (email !== ADMIN_EMAIL) return res.status(401).json({ success: false, message: 'Invalid credentials' });
-        const valid = await bcrypt.compare(password, ADMIN_PASS_HASH);
-        if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        if (password !== ADMIN_PASSWORD) return res.status(401).json({ success: false, message: 'Invalid credentials' });
         const token = jwt.sign({ email, role: 'super_admin' }, JWT_SECRET, { expiresIn: '7d' });
         res.json({ success: true, token, user: { email, name: 'RAI Admin', role: 'super_admin' } });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
