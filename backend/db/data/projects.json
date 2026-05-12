@@ -1,0 +1,29 @@
+[
+  {
+    "_id": "project-1",
+    "title": "Smart Manufacturing System",
+    "lead": "Dr. Rajesh Kumar",
+    "description": "IoT-based smart manufacturing platform",
+    "status": "In Progress",
+    "startDate": "2023-01-15",
+    "endDate": "2024-12-31",
+    "budget": 250000,
+    "team": [
+      "Dr. Rajesh Kumar",
+      "Prof. Anil Naik"
+    ]
+  },
+  {
+    "_id": "project-2",
+    "title": "Computer Vision for Quality Control",
+    "lead": "Dr. Priya Sharma",
+    "description": "CV-based inspection system",
+    "status": "In Progress",
+    "startDate": "2023-06-01",
+    "endDate": "2024-12-31",
+    "budget": 200000,
+    "team": [
+      "Dr. Priya Sharma"
+    ]
+  }
+]

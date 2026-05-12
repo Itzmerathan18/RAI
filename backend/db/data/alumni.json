@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "alumni-1",
+    "name": "Rajesh Verma",
+    "graduationYear": 2019,
+    "currentCompany": "Google",
+    "designation": "Senior Software Engineer",
+    "email": "rajesh.verma@google.com",
+    "linkedin": "linkedin.com/in/rajesh-verma"
+  },
+  {
+    "_id": "alumni-2",
+    "name": "Priya Gupta",
+    "graduationYear": 2020,
+    "currentCompany": "Microsoft",
+    "designation": "AI Researcher",
+    "email": "priya.gupta@microsoft.com",
+    "linkedin": "linkedin.com/in/priya-gupta"
+  }
+]

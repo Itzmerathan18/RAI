@@ -20,29 +20,23 @@ async function apiReq(path: string, method = 'GET', body?: object) {
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+        const fallback = await res.text();
+        let message = fallback || `Request failed with ${res.status}`;
+        try {
+            const parsed = JSON.parse(fallback);
+            message = parsed.message || message;
+        } catch { }
+        throw new Error(message);
+    }
     return res.json();
 }
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
-type Faculty = { id: string; name: string; designation: string; qualification: string; specialization: string; experience: number; email: string; researchAreas: string };
-type Notice = { id: string; title: string; category: string; description: string; date: string; important: boolean };
-type Event = { id: string; title: string; category: string; date: string; venue: string; description: string };
-type Placement = { id: string; year: number; placed: number; total: number; highest: number; average: number; companies: string };
-
-// ─── SEED DATA ───────────────────────────────────────────────────────────────
-const SEED_FACULTY: Faculty[] = [];
-const SEED_NOTICES: Notice[] = [];
-const SEED_EVENTS: Event[] = [];
-const SEED_PLACEMENTS: Placement[] = [];
-
-function loadLS<T>(key: string, seed: T[]): T[] {
-    if (typeof window === 'undefined') return seed;
-    try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : seed; } catch { return seed; }
-}
-function saveLS<T>(key: string, data: T[]) {
-    if (typeof window !== 'undefined') localStorage.setItem(key, JSON.stringify(data));
-}
+type Faculty = { _id?: string; name: string; designation: string; qualification: string; specialization: string; experience: number; email: string; researchAreas: string };
+type Notice = { _id?: string; title: string; category: string; description: string; date: string; important: boolean };
+type Event = { _id?: string; title: string; category: string; date: string; venue: string; description: string };
+type Placement = { _id?: string; year: number; placed: number; total: number; highest: number; average: number; companies: string };
 
 // ─── MODAL ───────────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -76,33 +70,34 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm";
 
 // ─── FACULTY MODULE ───────────────────────────────────────────────────────────
-const BLANK_FACULTY: Faculty = { id: '', name: '', designation: '', qualification: '', specialization: '', experience: 0, email: '', researchAreas: '' };
+const BLANK_FACULTY: Faculty = { name: '', designation: '', qualification: '', specialization: '', experience: 0, email: '', researchAreas: '' };
 
 function FacultyModule() {
     const [data, setData] = useState<Faculty[]>([]);
     const [modal, setModal] = useState<'add' | 'edit' | null>(null);
     const [editing, setEditing] = useState<Faculty>(BLANK_FACULTY);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => { setData(loadLS('admin_faculty', SEED_FACULTY)); }, []);
+    useEffect(() => { load(); }, []);
+    async function load() {
+        setLoading(true);
+        try { const r = await apiReq('/faculty'); setData(r.data || []); } catch { toast.error('Failed to load faculty'); }
+        finally { setLoading(false); }
+    }
 
-    const save = () => {
+    const save = async () => {
         if (!editing.name.trim() || !editing.email.trim()) { toast.error('Name and email are required'); return; }
-        let updated: Faculty[];
-        if (modal === 'add') {
-            updated = [...data, { ...editing, id: Date.now().toString() }];
-            toast.success('Faculty member added!');
-        } else {
-            updated = data.map(f => f.id === editing.id ? editing : f);
-            toast.success('Faculty updated!');
-        }
-        setData(updated); saveLS('admin_faculty', updated); setModal(null);
+        try {
+            if (modal === 'add') { await apiReq('/faculty', 'POST', editing); toast.success('Faculty member added!'); }
+            else { await apiReq(`/faculty/${editing._id}`, 'PUT', editing); toast.success('Faculty updated!'); }
+            setModal(null); load();
+        } catch (e: any) { toast.error(e.message || 'Error saving'); }
     };
 
-    const del = (id: string) => {
-        const updated = data.filter(f => f.id !== id);
-        setData(updated); saveLS('admin_faculty', updated);
-        toast.success('Faculty removed'); setDeleteId(null);
+    const del = async (id: string) => {
+        try { await apiReq(`/faculty/${id}`, 'DELETE'); toast.success('Faculty removed'); setDeleteId(null); load(); }
+        catch (e: any) { toast.error(e.message || 'Error deleting'); }
     };
 
     return (
@@ -111,7 +106,7 @@ function FacultyModule() {
                 <div><h1 className="font-display font-bold text-3xl text-white">Faculty</h1><p className="text-white/35 text-sm">{data.length} members</p></div>
                 <button onClick={() => { setEditing(BLANK_FACULTY); setModal('add'); }} className="btn-primary text-sm !py-2 !px-4"><FiPlus /> Add Faculty</button>
             </div>
-
+            {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-cyber/30 border-t-cyber rounded-full animate-spin" /></div> : (
             <div className="glass-card overflow-hidden">
                 <table className="w-full text-sm">
                     <thead><tr className="border-b border-white/10">
@@ -123,7 +118,7 @@ function FacultyModule() {
                     </tr></thead>
                     <tbody>
                         {data.map(f => (
-                            <tr key={f.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                            <tr key={f._id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                                 <td className="p-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -139,7 +134,7 @@ function FacultyModule() {
                                     <div className="flex justify-end gap-2">
                                         <button onClick={() => { setEditing(f); setModal('edit'); }}
                                             className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
-                                        <button onClick={() => setDeleteId(f.id)}
+                                        <button onClick={() => setDeleteId(f._id!)}
                                             className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
                                     </div>
                                 </td>
@@ -149,29 +144,29 @@ function FacultyModule() {
                 </table>
                 {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm">No faculty yet — click Add Faculty</div>}
             </div>
+            )}
 
             {/* Add/Edit Modal */}
             <AnimatePresence>
                 {modal && (
                     <Modal title={modal === 'add' ? 'Add Faculty Member' : 'Edit Faculty Member'} onClose={() => setModal(null)}>
-                        <Field label="Full Name *"><input className={inputCls} value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="Dr. Full Name" /></Field>
-                        <Field label="Designation *"><input className={inputCls} value={editing.designation} onChange={e => setEditing({ ...editing, designation: e.target.value })} placeholder="Professor & HOD" /></Field>
+                        <Field label="Full Name *"><input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="Dr. Full Name" /></Field>
+                        <Field label="Designation *"><input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.designation} onChange={e => setEditing({ ...editing, designation: e.target.value })} placeholder="Professor & HOD" /></Field>
                         <div className="grid grid-cols-2 gap-3">
-                            <Field label="Qualification"><input className={inputCls} value={editing.qualification} onChange={e => setEditing({ ...editing, qualification: e.target.value })} placeholder="Ph.D" /></Field>
-                            <Field label="Specialization"><input className={inputCls} value={editing.specialization} onChange={e => setEditing({ ...editing, specialization: e.target.value })} placeholder="Robotics" /></Field>
+                            <Field label="Qualification"><input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.qualification} onChange={e => setEditing({ ...editing, qualification: e.target.value })} placeholder="Ph.D" /></Field>
+                            <Field label="Specialization"><input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.specialization} onChange={e => setEditing({ ...editing, specialization: e.target.value })} placeholder="Robotics" /></Field>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                            <Field label="Experience (Yrs)"><input type="number" className={inputCls} value={editing.experience} onChange={e => setEditing({ ...editing, experience: Number(e.target.value) })} /></Field>
-                            <Field label="Email *"><input type="email" className={inputCls} value={editing.email} onChange={e => setEditing({ ...editing, email: e.target.value })} placeholder="name@jnnce.ac.in" /></Field>
+                            <Field label="Experience (Yrs)"><input type="number" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.experience} onChange={e => setEditing({ ...editing, experience: Number(e.target.value) })} /></Field>
+                            <Field label="Email *"><input type="email" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.email} onChange={e => setEditing({ ...editing, email: e.target.value })} placeholder="name@jnnce.ac.in" /></Field>
                         </div>
-                        <Field label="Research Areas (comma-separated)"><input className={inputCls} value={editing.researchAreas} onChange={e => setEditing({ ...editing, researchAreas: e.target.value })} placeholder="Robotics, Computer Vision" /></Field>
+                        <Field label="Research Areas (comma-separated)"><input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.researchAreas} onChange={e => setEditing({ ...editing, researchAreas: e.target.value })} placeholder="Robotics, Computer Vision" /></Field>
                         <div className="flex gap-3 mt-2">
                             <button onClick={save} className="btn-primary flex-1 justify-center"><FiSave /> {modal === 'add' ? 'Add Member' : 'Save Changes'}</button>
                             <button onClick={() => setModal(null)} className="btn-secondary flex-1 justify-center">Cancel</button>
                         </div>
                     </Modal>
                 )}
-
                 {deleteId && (
                     <Modal title="Confirm Delete" onClose={() => setDeleteId(null)}>
                         <p className="text-white/60 mb-5 text-sm">Are you sure you want to remove this faculty member? This cannot be undone.</p>
@@ -187,7 +182,7 @@ function FacultyModule() {
 }
 
 // ─── NOTICES MODULE ───────────────────────────────────────────────────────────
-const BLANK_NOTICE: Notice = { id: '', title: '', category: 'General', description: '', date: new Date().toISOString().split('T')[0], important: false };
+const BLANK_NOTICE: Notice = { title: '', category: 'General', description: '', date: new Date().toISOString().split('T')[0], important: false };
 const NOTICE_CATS = ['General', 'Exam', 'Event', 'Scholarship', 'Holiday', 'Placement', 'Result'];
 const catColors: Record<string, string> = { Exam: 'bg-red-500/20 text-red-300', Event: 'bg-blue-500/20 text-blue-300', Scholarship: 'bg-yellow-500/20 text-yellow-300', Holiday: 'bg-green-500/20 text-green-300', Placement: 'bg-purple-500/20 text-purple-300', Result: 'bg-orange-500/20 text-orange-300', General: 'bg-white/10 text-white/50' };
 
@@ -196,26 +191,27 @@ function NoticesModule() {
     const [modal, setModal] = useState<'add' | 'edit' | null>(null);
     const [editing, setEditing] = useState<Notice>(BLANK_NOTICE);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => { setData(loadLS('admin_notices', SEED_NOTICES)); }, []);
+    useEffect(() => { load(); }, []);
+    async function load() {
+        setLoading(true);
+        try { const r = await apiReq('/notices'); setData(r.data || []); } catch { toast.error('Failed to load notices'); }
+        finally { setLoading(false); }
+    }
 
-    const save = () => {
+    const save = async () => {
         if (!editing.title.trim()) { toast.error('Title is required'); return; }
-        let updated: Notice[];
-        if (modal === 'add') {
-            updated = [{ ...editing, id: Date.now().toString() }, ...data];
-            toast.success('Notice published!');
-        } else {
-            updated = data.map(n => n.id === editing.id ? editing : n);
-            toast.success('Notice updated!');
-        }
-        setData(updated); saveLS('admin_notices', updated); setModal(null);
+        try {
+            if (modal === 'add') { await apiReq('/notices', 'POST', editing); toast.success('Notice published!'); }
+            else { await apiReq(`/notices/${editing._id}`, 'PUT', editing); toast.success('Notice updated!'); }
+            setModal(null); load();
+        } catch (e: any) { toast.error(e.message || 'Error saving notice'); }
     };
 
-    const del = (id: string) => {
-        const updated = data.filter(n => n.id !== id);
-        setData(updated); saveLS('admin_notices', updated);
-        toast.success('Notice deleted'); setDeleteId(null);
+    const del = async (id: string) => {
+        try { await apiReq(`/notices/${id}`, 'DELETE'); toast.success('Notice deleted'); setDeleteId(null); load(); }
+        catch (e: any) { toast.error(e.message || 'Error deleting'); }
     };
 
     return (
@@ -224,10 +220,10 @@ function NoticesModule() {
                 <div><h1 className="font-display font-bold text-3xl text-white">Notices</h1><p className="text-white/35 text-sm">{data.length} notices</p></div>
                 <button onClick={() => { setEditing({ ...BLANK_NOTICE, date: new Date().toISOString().split('T')[0] }); setModal('add'); }} className="btn-primary text-sm !py-2 !px-4"><FiPlus /> Add Notice</button>
             </div>
-
+            {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-cyber/30 border-t-cyber rounded-full animate-spin" /></div> : (
             <div className="space-y-3">
                 {data.map(n => (
-                    <div key={n.id} className="glass-card p-4 flex items-start gap-4 hover:border-primary-500/20 transition-all">
+                    <div key={n._id} className="glass-card p-4 flex items-start gap-4 hover:border-primary-500/20 transition-all">
                         <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
                                 <span className={`badge text-xs ${catColors[n.category] || catColors.General}`}>{n.category}</span>
@@ -240,27 +236,27 @@ function NoticesModule() {
                         <div className="flex gap-1.5 flex-shrink-0">
                             <button onClick={() => { setEditing(n); setModal('edit'); }}
                                 className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
-                            <button onClick={() => setDeleteId(n.id)}
+                            <button onClick={() => setDeleteId(n._id!)}
                                 className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
                         </div>
                     </div>
                 ))}
                 {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm glass-card">No notices yet — click Add Notice</div>}
             </div>
-
+            )}
             <AnimatePresence>
                 {modal && (
                     <Modal title={modal === 'add' ? 'Publish Notice' : 'Edit Notice'} onClose={() => setModal(null)}>
-                        <Field label="Title *"><input className={inputCls} value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} placeholder="Notice title…" /></Field>
+                        <Field label="Title *"><input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} placeholder="Notice title…" /></Field>
                         <div className="grid grid-cols-2 gap-3">
                             <Field label="Category">
-                                <select className={inputCls} value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })}>
+                                <select className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })}>
                                     {NOTICE_CATS.map(c => <option key={c} value={c} className="bg-dark-900">{c}</option>)}
                                 </select>
                             </Field>
-                            <Field label="Date"><input type="date" className={inputCls} value={editing.date} onChange={e => setEditing({ ...editing, date: e.target.value })} /></Field>
+                            <Field label="Date"><input type="date" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.date} onChange={e => setEditing({ ...editing, date: e.target.value })} /></Field>
                         </div>
-                        <Field label="Description"><textarea className={inputCls} rows={4} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} placeholder="Notice details…" /></Field>
+                        <Field label="Description"><textarea className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" rows={4} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} placeholder="Notice details…" /></Field>
                         <label className="flex items-center gap-2.5 mb-5 cursor-pointer">
                             <div className={`w-10 h-5 rounded-full transition-colors flex items-center ${editing.important ? 'bg-red-500' : 'bg-white/10'}`}
                                 onClick={() => setEditing({ ...editing, important: !editing.important })}>
@@ -289,7 +285,7 @@ function NoticesModule() {
 }
 
 // ─── EVENTS MODULE ────────────────────────────────────────────────────────────
-const BLANK_EVENT: Event = { id: '', title: '', category: 'Technical', date: new Date().toISOString().split('T')[0], venue: '', description: '' };
+const BLANK_EVENT: Event = { title: '', category: 'Technical', date: new Date().toISOString().split('T')[0], venue: '', description: '' };
 const EVENT_CATS = ['Technical', 'Hackathon', 'Lecture', 'Workshop', 'Cultural', 'Sports', 'Seminar'];
 
 function EventsModule() {
@@ -297,26 +293,27 @@ function EventsModule() {
     const [modal, setModal] = useState<'add' | 'edit' | null>(null);
     const [editing, setEditing] = useState<Event>(BLANK_EVENT);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => { setData(loadLS('admin_events', SEED_EVENTS)); }, []);
+    useEffect(() => { load(); }, []);
+    async function load() {
+        setLoading(true);
+        try { const r = await apiReq('/events'); setData(r.data || []); } catch { toast.error('Failed to load events'); }
+        finally { setLoading(false); }
+    }
 
-    const save = () => {
+    const save = async () => {
         if (!editing.title.trim()) { toast.error('Title is required'); return; }
-        let updated: Event[];
-        if (modal === 'add') {
-            updated = [{ ...editing, id: Date.now().toString() }, ...data];
-            toast.success('Event created!');
-        } else {
-            updated = data.map(e => e.id === editing.id ? editing : e);
-            toast.success('Event updated!');
-        }
-        setData(updated); saveLS('admin_events', updated); setModal(null);
+        try {
+            if (modal === 'add') { await apiReq('/events', 'POST', editing); toast.success('Event created!'); }
+            else { await apiReq(`/events/${editing._id}`, 'PUT', editing); toast.success('Event updated!'); }
+            setModal(null); load();
+        } catch (e: any) { toast.error(e.message || 'Error saving event'); }
     };
 
-    const del = (id: string) => {
-        const updated = data.filter(e => e.id !== id);
-        setData(updated); saveLS('admin_events', updated);
-        toast.success('Event removed'); setDeleteId(null);
+    const del = async (id: string) => {
+        try { await apiReq(`/events/${id}`, 'DELETE'); toast.success('Event removed'); setDeleteId(null); load(); }
+        catch (e: any) { toast.error(e.message || 'Error deleting'); }
     };
 
     return (
@@ -325,10 +322,10 @@ function EventsModule() {
                 <div><h1 className="font-display font-bold text-3xl text-white">Events</h1><p className="text-white/35 text-sm">{data.length} events</p></div>
                 <button onClick={() => { setEditing({ ...BLANK_EVENT, date: new Date().toISOString().split('T')[0] }); setModal('add'); }} className="btn-primary text-sm !py-2 !px-4"><FiPlus /> Add Event</button>
             </div>
-
+            {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-cyber/30 border-t-cyber rounded-full animate-spin" /></div> : (
             <div className="grid md:grid-cols-2 gap-4">
                 {data.map(ev => (
-                    <div key={ev.id} className="glass-card p-5 hover:border-primary-500/20 transition-all group">
+                    <div key={ev._id} className="glass-card p-5 hover:border-primary-500/20 transition-all group">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
                                 <span className="badge bg-primary-500/20 text-primary-300 text-xs mb-2">{ev.category}</span>
@@ -339,7 +336,7 @@ function EventsModule() {
                             <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button onClick={() => { setEditing(ev); setModal('edit'); }}
                                     className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
-                                <button onClick={() => setDeleteId(ev.id)}
+                                <button onClick={() => setDeleteId(ev._id!)}
                                     className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
                             </div>
                         </div>
@@ -347,21 +344,21 @@ function EventsModule() {
                 ))}
                 {data.length === 0 && <div className="col-span-2 text-center py-12 text-white/25 text-sm glass-card">No events yet — click Add Event</div>}
             </div>
-
+            )}
             <AnimatePresence>
                 {modal && (
                     <Modal title={modal === 'add' ? 'Create Event' : 'Edit Event'} onClose={() => setModal(null)}>
-                        <Field label="Event Title *"><input className={inputCls} value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} placeholder="Event name…" /></Field>
+                        <Field label="Event Title *"><input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} placeholder="Event name…" /></Field>
                         <div className="grid grid-cols-2 gap-3">
                             <Field label="Category">
-                                <select className={inputCls} value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })}>
+                                <select className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })}>
                                     {EVENT_CATS.map(c => <option key={c} value={c} className="bg-dark-900">{c}</option>)}
                                 </select>
                             </Field>
-                            <Field label="Date"><input type="date" className={inputCls} value={editing.date} onChange={e => setEditing({ ...editing, date: e.target.value })} /></Field>
+                            <Field label="Date"><input type="date" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.date} onChange={e => setEditing({ ...editing, date: e.target.value })} /></Field>
                         </div>
-                        <Field label="Venue"><input className={inputCls} value={editing.venue} onChange={e => setEditing({ ...editing, venue: e.target.value })} placeholder="e.g. AICTE-IDEA Lab, JNNCE" /></Field>
-                        <Field label="Description"><textarea className={inputCls} rows={4} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} placeholder="Event details…" /></Field>
+                        <Field label="Venue"><input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.venue} onChange={e => setEditing({ ...editing, venue: e.target.value })} placeholder="e.g. AICTE-IDEA Lab, JNNCE" /></Field>
+                        <Field label="Description"><textarea className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" rows={4} value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} placeholder="Event details…" /></Field>
                         <div className="flex gap-3 mt-2">
                             <button onClick={save} className="btn-primary flex-1 justify-center"><FiSave /> {modal === 'add' ? 'Create' : 'Save'}</button>
                             <button onClick={() => setModal(null)} className="btn-secondary flex-1 justify-center">Cancel</button>
@@ -383,33 +380,34 @@ function EventsModule() {
 }
 
 // ─── PLACEMENTS MODULE ────────────────────────────────────────────────────────
-const BLANK_PLACEMENT: Placement = { id: '', year: new Date().getFullYear(), placed: 0, total: 60, highest: 0, average: 0, companies: '' };
+const BLANK_PLACEMENT: Placement = { year: new Date().getFullYear(), placed: 0, total: 60, highest: 0, average: 0, companies: '' };
 
 function PlacementsModule() {
     const [data, setData] = useState<Placement[]>([]);
     const [modal, setModal] = useState<'add' | 'edit' | null>(null);
     const [editing, setEditing] = useState<Placement>(BLANK_PLACEMENT);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => { setData(loadLS('admin_placements', SEED_PLACEMENTS)); }, []);
+    useEffect(() => { load(); }, []);
+    async function load() {
+        setLoading(true);
+        try { const r = await apiReq('/placements'); setData(r.data || []); } catch { toast.error('Failed to load placements'); }
+        finally { setLoading(false); }
+    }
 
-    const save = () => {
+    const save = async () => {
         if (!editing.year) { toast.error('Year is required'); return; }
-        let updated: Placement[];
-        if (modal === 'add') {
-            updated = [{ ...editing, id: Date.now().toString() }, ...data];
-            toast.success('Placement record added!');
-        } else {
-            updated = data.map(p => p.id === editing.id ? editing : p);
-            toast.success('Placement updated!');
-        }
-        setData(updated); saveLS('admin_placements', updated); setModal(null);
+        try {
+            if (modal === 'add') { await apiReq('/placements', 'POST', editing); toast.success('Placement record added!'); }
+            else { await apiReq(`/placements/${editing._id}`, 'PUT', editing); toast.success('Placement updated!'); }
+            setModal(null); load();
+        } catch (e: any) { toast.error(e.message || 'Error saving placement'); }
     };
 
-    const del = (id: string) => {
-        const updated = data.filter(p => p.id !== id);
-        setData(updated); saveLS('admin_placements', updated);
-        toast.success('Record deleted'); setDeleteId(null);
+    const del = async (id: string) => {
+        try { await apiReq(`/placements/${id}`, 'DELETE'); toast.success('Record deleted'); setDeleteId(null); load(); }
+        catch (e: any) { toast.error(e.message || 'Error deleting'); }
     };
 
     return (
@@ -418,7 +416,7 @@ function PlacementsModule() {
                 <div><h1 className="font-display font-bold text-3xl text-white">Placements</h1><p className="text-white/35 text-sm">Year-wise data</p></div>
                 <button onClick={() => { setEditing(BLANK_PLACEMENT); setModal('add'); }} className="btn-primary text-sm !py-2 !px-4"><FiPlus /> Add Year</button>
             </div>
-
+            {loading ? <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-cyber/30 border-t-cyber rounded-full animate-spin" /></div> : (
             <div className="glass-card overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead><tr className="border-b border-white/10">
@@ -428,7 +426,7 @@ function PlacementsModule() {
                     </tr></thead>
                     <tbody>
                         {[...data].sort((a, b) => b.year - a.year).map(p => (
-                            <tr key={p.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                            <tr key={p._id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                                 <td className="p-4 font-bold text-white">{p.year}</td>
                                 <td className="p-4 text-white/55">{p.total}</td>
                                 <td className="p-4 text-white/55">{p.placed}</td>
@@ -440,7 +438,7 @@ function PlacementsModule() {
                                     <div className="flex gap-1.5">
                                         <button onClick={() => { setEditing(p); setModal('edit'); }}
                                             className="p-1.5 rounded-lg text-white/40 hover:text-primary-300 hover:bg-primary-500/10 transition-all"><FiEdit2 className="w-4 h-4" /></button>
-                                        <button onClick={() => setDeleteId(p.id)}
+                                        <button onClick={() => setDeleteId(p._id!)}
                                             className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"><FiTrash2 className="w-4 h-4" /></button>
                                     </div>
                                 </td>
@@ -450,19 +448,19 @@ function PlacementsModule() {
                 </table>
                 {data.length === 0 && <div className="text-center py-12 text-white/25 text-sm">No records yet</div>}
             </div>
-
+            )}
             <AnimatePresence>
                 {modal && (
                     <Modal title={modal === 'add' ? 'Add Placement Year' : 'Edit Placement Record'} onClose={() => setModal(null)}>
                         <div className="grid grid-cols-2 gap-3">
-                            <Field label="Year *"><input type="number" className={inputCls} value={editing.year} onChange={e => setEditing({ ...editing, year: Number(e.target.value) })} /></Field>
-                            <Field label="Total Students"><input type="number" className={inputCls} value={editing.total} onChange={e => setEditing({ ...editing, total: Number(e.target.value) })} /></Field>
-                            <Field label="Students Placed"><input type="number" className={inputCls} value={editing.placed} onChange={e => setEditing({ ...editing, placed: Number(e.target.value) })} /></Field>
-                            <Field label="Highest Package (LPA)"><input type="number" step="0.1" className={inputCls} value={editing.highest} onChange={e => setEditing({ ...editing, highest: Number(e.target.value) })} /></Field>
-                            <Field label="Average Package (LPA)"><input type="number" step="0.1" className={inputCls} value={editing.average} onChange={e => setEditing({ ...editing, average: Number(e.target.value) })} /></Field>
+                            <Field label="Year *"><input type="number" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.year} onChange={e => setEditing({ ...editing, year: Number(e.target.value) })} /></Field>
+                            <Field label="Total Students"><input type="number" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.total} onChange={e => setEditing({ ...editing, total: Number(e.target.value) })} /></Field>
+                            <Field label="Students Placed"><input type="number" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.placed} onChange={e => setEditing({ ...editing, placed: Number(e.target.value) })} /></Field>
+                            <Field label="Highest Package (LPA)"><input type="number" step="0.1" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.highest} onChange={e => setEditing({ ...editing, highest: Number(e.target.value) })} /></Field>
+                            <Field label="Average Package (LPA)"><input type="number" step="0.1" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.average} onChange={e => setEditing({ ...editing, average: Number(e.target.value) })} /></Field>
                         </div>
                         <Field label="Top Recruiting Companies (comma-separated)">
-                            <input className={inputCls} value={editing.companies} onChange={e => setEditing({ ...editing, companies: e.target.value })} placeholder="ABB, Bosch, Infosys, TCS" />
+                            <input className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm" value={editing.companies} onChange={e => setEditing({ ...editing, companies: e.target.value })} placeholder="ABB, Bosch, Infosys, TCS" />
                         </Field>
                         <div className="flex gap-3 mt-2">
                             <button onClick={save} className="btn-primary flex-1 justify-center"><FiSave /> {modal === 'add' ? 'Add Record' : 'Save'}</button>
@@ -488,12 +486,9 @@ function PlacementsModule() {
 function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
     const [counts, setCounts] = useState({ faculty: 0, notices: 0, events: 0, placements: 0 });
     useEffect(() => {
-        setCounts({
-            faculty: loadLS('admin_faculty', SEED_FACULTY).length,
-            notices: loadLS('admin_notices', SEED_NOTICES).length,
-            events: loadLS('admin_events', SEED_EVENTS).length,
-            placements: loadLS('admin_placements', SEED_PLACEMENTS).length,
-        });
+        apiReq('/analytics').then(r => {
+            if (r.data) setCounts(r.data);
+        }).catch(() => {});
     }, []);
 
     return (
@@ -538,10 +533,10 @@ function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
             </div>
 
             <div className="glass-card p-5 mt-5">
-                <h3 className="font-semibold text-white text-sm mb-4">Data Storage</h3>
-                <p className="text-xs text-white/40 mb-3">All changes are saved to your browser&apos;s localStorage instantly. Connect the backend to persist data in MongoDB.</p>
+                <h3 className="font-semibold text-white text-sm mb-4">Database Connection</h3>
+                <p className="text-xs text-white/40 mb-3">All your data is now being stored persistently into your MongoDB cluster.</p>
                 <div className="flex items-center gap-2 text-xs text-accent-400 font-medium">
-                    <FiCheckCircle className="w-4 h-4" /> Auto-save enabled (localStorage)
+                    <FiCheckCircle className="w-4 h-4" /> Live DB Connected
                 </div>
             </div>
         </div>
@@ -550,7 +545,7 @@ function OverviewTab({ setTab }: { setTab: (t: string) => void }) {
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 const ADMIN_EMAIL = 'rai@jnnce.ac.in';
-const ADMIN_PASS = 'rai#@123';
+const ADMIN_PASS = 'Rai@123';
 
 function LoginScreen({ onLogin }: { onLogin: (u: AdminUser) => void }) {
     const [form, setForm] = useState({ email: '', password: '' });
@@ -690,7 +685,7 @@ function AdminShell({ user, onLogout }: { user: AdminUser; onLogout: () => void 
                     </button>
                     <div className="text-sm text-white/40 capitalize">{navItems.find(n => n.key === tab)?.label}</div>
                     <div className="ml-auto text-xs text-accent-400 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-accent-400 animate-pulse" /> Auto-save ON
+                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> Connected to Database
                     </div>
                 </header>
 

@@ -1,0 +1,29 @@
+[
+  {
+    "_id": "ach-1",
+    "title": "Best Paper Award",
+    "description": "Won best paper award at ICRA 2023",
+    "awardedTo": "Dr. Rajesh Kumar",
+    "date": "2023-05-15",
+    "category": "Research",
+    "details": "For paper on Autonomous Navigation Systems"
+  },
+  {
+    "_id": "ach-2",
+    "title": "Industry Excellence Award",
+    "description": "Recognition for industry collaboration",
+    "awardedTo": "Dr. Priya Sharma",
+    "date": "2023-08-20",
+    "category": "Industry Collaboration",
+    "details": "For developing ML solutions for manufacturing"
+  },
+  {
+    "_id": "ach-3",
+    "title": "Patent Granted",
+    "description": "Patent granted for smart control system",
+    "awardedTo": "Dr. Rajesh Kumar, Prof. Anil Naik",
+    "date": "2023-10-10",
+    "category": "Innovation",
+    "details": "US Patent for Adaptive Control Mechanism"
+  }
+]

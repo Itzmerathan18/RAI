@@ -1,38 +1,44 @@
-const express = require('express');
-const Alumni = require('../models/Alumni');
-const { protect, authorize } = require('../middleware/auth');
+﻿const express = require('express');
+const Store = require('../db/store');
+const { protect } = require('../middleware/auth');
 const router = express.Router();
+const COL = 'alumni';
 
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
     try {
-        const { batch, isMentor } = req.query;
-        const filter = {};
-        if (batch) filter.batch = batch;
-        if (isMentor) filter.isMentor = isMentor === 'true';
-        const alumni = await Alumni.find(filter).sort('name');
-        res.json({ success: true, count: alumni.length, data: alumni });
+        const data = Store.find(COL);
+        res.json({ success: true, count: data.length, data });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-router.post('/', protect, authorize('super_admin'), async (req, res) => {
+router.get('/:id', (req, res) => {
     try {
-        const alumnus = await Alumni.create(req.body);
-        res.status(201).json({ success: true, data: alumnus });
+        const item = Store.findById(COL, req.params.id);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, data: item });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+router.post('/', protect, (req, res) => {
+    try {
+        const item = Store.create(COL, req.body);
+        res.status(201).json({ success: true, data: item });
     } catch (err) { res.status(400).json({ success: false, message: err.message }); }
 });
 
-router.put('/:id', protect, authorize('super_admin'), async (req, res) => {
+router.put('/:id', protect, (req, res) => {
     try {
-        const alumnus = await Alumni.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!alumnus) return res.status(404).json({ success: false, message: 'Alumni not found' });
-        res.json({ success: true, data: alumnus });
+        const item = Store.update(COL, req.params.id, req.body);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, data: item });
     } catch (err) { res.status(400).json({ success: false, message: err.message }); }
 });
 
-router.delete('/:id', protect, authorize('super_admin'), async (req, res) => {
+router.delete('/:id', protect, (req, res) => {
     try {
-        await Alumni.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Alumni deleted' });
+        const item = Store.delete(COL, req.params.id);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, message: 'Deleted' });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 

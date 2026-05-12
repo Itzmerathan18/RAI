@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiSearch, FiMail, FiFilter } from 'react-icons/fi';
+import { getFaculty } from '@/lib/api';
 
 const SPECS = ['All', 'Robotics', 'AI/ML', 'Control Systems', 'Embedded Systems', 'Mechatronics', 'Computer Vision'];
 
@@ -31,14 +32,9 @@ export default function FacultyPage() {
     const [faculty, setFaculty] = useState<Faculty[]>([]);
 
     useEffect(() => {
-        try {
-            const stored = typeof window !== 'undefined'
-                ? JSON.parse(localStorage.getItem('admin_faculty') || '[]')
-                : [];
-            setFaculty(stored);
-        } catch {
-            setFaculty([]);
-        }
+        getFaculty()
+            .then(res => { if (res.data?.success && res.data?.data) setFaculty(res.data.data); })
+            .catch(() => setFaculty([]));
     }, []);
 
     const filtered = faculty.filter(f =>
@@ -92,7 +88,7 @@ export default function FacultyPage() {
                 {/* Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {sorted.map((member, i) => (
-                        <motion.div key={member.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+                        <motion.div key={(member as { _id?: string })._id ?? member.id ?? i} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.07 }}
                             whileHover={{ y: -4, scale: 1.01 }}
                             className="glass-card p-6 transition-all duration-300 group hover:border-primary-500/30 hover:shadow-glow">
@@ -142,7 +138,7 @@ export default function FacultyPage() {
 
                 {/* Note */}
                 <p className="text-center text-xs text-white/20 mt-8">
-                    Data shown here comes from the Admin Portal Faculty module (local browser storage / backend).
+                    Data shown here comes from the live database.
                 </p>
             </section>
         </div>

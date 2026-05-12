@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "pub-1",
+    "title": "Deep Learning Models for Autonomous Systems",
+    "authors": [
+      "Dr. Rajesh Kumar",
+      "Dr. Priya Sharma"
+    ],
+    "year": 2023,
+    "journal": "IEEE Transactions on Robotics",
+    "doi": "10.1109/TRO.2023.1234567",
+    "citationCount": 15
+  },
+  {
+    "_id": "pub-2",
+    "title": "Vision-Based Navigation in Dynamic Environments",
+    "authors": [
+      "Dr. Priya Sharma",
+      "Prof. Anil Naik"
+    ],
+    "year": 2023,
+    "journal": "Computer Vision and Image Understanding",
+    "doi": "10.1016/j.cviu.2023.103456",
+    "citationCount": 8
+  }
+]

@@ -1,7 +1,15 @@
+'use client';
 import Link from 'next/link';
-import { FiExternalLink, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
+import { usePathname } from 'next/navigation';
+import { FiExternalLink, FiMail, FiPhone, FiMapPin, FiFacebook, FiTwitter, FiLinkedin, FiYoutube } from 'react-icons/fi';
 
 export default function Footer() {
+    const pathname = usePathname();
+    
+    if (pathname.startsWith('/admin')) {
+        return null;
+    }
+
     return (
         <footer className="bg-black border-t border-cyber/15 mt-20">
             {/* Cyber line at top */}
@@ -15,11 +23,11 @@ export default function Footer() {
                         <div className="flex items-center gap-2.5 mb-4">
                             <div className="w-9 h-9 rounded-lg bg-cyber flex items-center justify-center font-orbitron font-black text-black text-sm shadow-glow">R</div>
                             <div>
-                                <div className="font-orbitron font-bold text-xs text-white uppercase tracking-wider">Dept. of RAI</div>
-                                <div className="text-[10px] text-white/25 tracking-widest uppercase">JNNCE</div>
+                                <div className="font-orbitron font-bold text-xs text-white uppercase tracking-wider drop-shadow-[0_2px_8px_rgba(0,0,0,0.75)]">Dept. of RAI</div>
+                                <div className="text-[10px] text-white/45 tracking-widest uppercase font-semibold">JNNCE</div>
                             </div>
                         </div>
-                        <p className="text-xs text-white/35 leading-relaxed mb-4 font-space">
+                        <p className="text-xs text-white/65 leading-relaxed mb-4 font-space font-medium">
                             Department of Robotics &amp; Artificial Intelligence,<br />
                             Jawaharlal Nehru National College of Engineering,<br />
                             Navule, Savalanga Road,<br />
@@ -27,22 +35,38 @@ export default function Footer() {
                         </p>
 
                         {/* Contact */}
-                        <div className="space-y-2">
-                            <a href="tel:08182225341" className="flex items-center gap-2 text-xs text-white/35 hover:text-cyber transition-colors font-space">
+                        <div className="space-y-2 mb-6">
+                            <a href="tel:08182225341" className="flex items-center gap-2 text-xs text-white/70 hover:text-cyber transition-colors font-space font-medium">
                                 <FiPhone className="w-3 h-3 text-cyber flex-shrink-0" /> 08182 – 225341
                             </a>
-                            <a href="mailto:rai@jnnce.ac.in" className="flex items-center gap-2 text-xs text-white/35 hover:text-cyber transition-colors font-space">
+                            <a href="mailto:rai@jnnce.ac.in" className="flex items-center gap-2 text-xs text-white/70 hover:text-cyber transition-colors font-space font-medium">
                                 <FiMail className="w-3 h-3 text-cyber flex-shrink-0" /> rai@jnnce.ac.in
                             </a>
-                            <div className="flex items-start gap-2 text-xs text-white/25 font-space">
+                            <div className="flex items-start gap-2 text-xs text-white/55 font-space font-medium">
                                 <FiMapPin className="w-3 h-3 text-cyber flex-shrink-0 mt-0.5" /> Navule, Shivamogga – 577201
                             </div>
+                        </div>
+
+                        {/* Social Links */}
+                        <div className="flex items-center gap-3">
+                            <a href="#" aria-label="Facebook" title="Facebook" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-cyber/10 hover:text-cyber hover:shadow-glow transition-all">
+                                <FiFacebook className="w-4 h-4" />
+                            </a>
+                            <a href="#" aria-label="Twitter" title="Twitter" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-cyber/10 hover:text-cyber hover:shadow-glow transition-all">
+                                <FiTwitter className="w-4 h-4" />
+                            </a>
+                            <a href="#" aria-label="LinkedIn" title="LinkedIn" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-cyber/10 hover:text-cyber hover:shadow-glow transition-all">
+                                <FiLinkedin className="w-4 h-4" />
+                            </a>
+                            <a href="#" aria-label="YouTube" title="YouTube" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-cyber/10 hover:text-cyber hover:shadow-glow transition-all">
+                                <FiYoutube className="w-4 h-4" />
+                            </a>
                         </div>
                     </div>
 
                     {/* Quick Links */}
                     <div>
-                        <h4 className="font-orbitron text-[10px] text-cyber uppercase tracking-widest mb-4">Quick Links</h4>
+                        <h4 className="font-orbitron text-[11px] text-cyber uppercase tracking-widest mb-4 font-semibold">Quick Links</h4>
                         <ul className="space-y-2">
                             {[
                                 { label: 'Home', href: '/' },
@@ -54,7 +78,7 @@ export default function Footer() {
                                 { label: 'Gallery', href: '/gallery' },
                             ].map(l => (
                                 <li key={l.href}>
-                                    <Link href={l.href} className="text-xs text-white/35 hover:text-cyber transition-colors font-space">
+                                    <Link href={l.href} className="text-xs text-white/65 hover:text-cyber transition-colors font-space font-medium">
                                         {l.label}
                                     </Link>
                                 </li>
@@ -64,7 +88,7 @@ export default function Footer() {
 
                     {/* Student Links */}
                     <div>
-                        <h4 className="font-orbitron text-[10px] text-cyber uppercase tracking-widest mb-4">Students</h4>
+                        <h4 className="font-orbitron text-[11px] text-cyber uppercase tracking-widest mb-4 font-semibold">Students</h4>
                         <ul className="space-y-2">
                             {[
                                 { label: 'Placements', href: '/placements' },
@@ -75,7 +99,7 @@ export default function Footer() {
                                 { label: 'Contact Dept.', href: '/contact' },
                             ].map(l => (
                                 <li key={l.href}>
-                                    <Link href={l.href} className="text-xs text-white/35 hover:text-cyber transition-colors font-space">
+                                    <Link href={l.href} className="text-xs text-white/65 hover:text-cyber transition-colors font-space font-medium">
                                         {l.label}
                                     </Link>
                                 </li>
@@ -85,7 +109,7 @@ export default function Footer() {
 
                     {/* Affiliations */}
                     <div>
-                        <h4 className="font-orbitron text-[10px] text-cyber uppercase tracking-widest mb-4">Affiliations</h4>
+                        <h4 className="font-orbitron text-[11px] text-cyber uppercase tracking-widest mb-4 font-semibold">Affiliations</h4>
                         <div className="space-y-2">
                             {[
                                 { label: 'JNNCE Official Website', href: 'https://jnnce.ac.in' },
@@ -95,7 +119,7 @@ export default function Footer() {
                                 { label: 'NES (Trust)', href: '#' },
                             ].map(l => (
                                 <a key={l.href} href={l.href} target="_blank" rel="noreferrer"
-                                    className="flex items-center gap-1.5 text-xs text-white/30 hover:text-cyber transition-colors font-space">
+                                    className="flex items-center gap-1.5 text-xs text-white/60 hover:text-cyber transition-colors font-space font-medium">
                                     <FiExternalLink className="w-3 h-3 flex-shrink-0" /> {l.label}
                                 </a>
                             ))}
@@ -114,12 +138,12 @@ export default function Footer() {
             {/* Bottom bar */}
             <div className="border-t border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-                    <p className="text-[10px] text-white/20 font-space">
+                    <p className="text-[10px] text-white/45 font-space font-medium tracking-wide">
                         © {new Date().getFullYear()} Dept. of Robotics &amp; Artificial Intelligence · JNNCE, Shivamogga. All rights reserved.
                     </p>
                     <div className="flex items-center gap-4">
-                        <Link href="/admin" className="text-[10px] text-white/20 hover:text-cyber transition-colors font-orbitron uppercase tracking-widest">Admin</Link>
-                        <span className="text-[10px] text-white/15 font-space">VTU Reg. No: PES20AI · Est. 2020</span>
+                        <Link href="/admin" className="text-[10px] text-white/45 hover:text-cyber transition-colors font-orbitron uppercase tracking-widest font-semibold">Admin</Link>
+                        <span className="text-[10px] text-white/35 font-space font-medium">VTU Reg. No: PES20AI · Est. 2020</span>
                     </div>
                 </div>
             </div>

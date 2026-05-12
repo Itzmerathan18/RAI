@@ -11,16 +11,27 @@ const Student = require('../models/Student');
 const Notice = require('../models/Notice');
 const Event = require('../models/Event');
 const Alumni = require('../models/Alumni');
-
-connectDB();
+const Lab = require('../models/Lab');
+const Research = require('../models/Research');
+const Publication = require('../models/Publication');
+const Achievement = require('../models/Achievement');
+const Gallery = require('../models/Gallery');
 
 const seed = async () => {
     try {
+        const isConnected = await connectDB();
+        if (!isConnected) {
+            console.error('❌ Cannot seed without a database connection.');
+            process.exit(1);
+        }
+
         // Clear existing data
         await Promise.all([
             User.deleteMany(), Faculty.deleteMany(), Project.deleteMany(),
             Placement.deleteMany(), Student.deleteMany(), Notice.deleteMany(),
-            Event.deleteMany(), Alumni.deleteMany()
+            Event.deleteMany(), Alumni.deleteMany(), Lab.deleteMany(),
+            Research.deleteMany(), Publication.deleteMany(), Achievement.deleteMany(),
+            Gallery.deleteMany()
         ]);
 
         // Seed admin user

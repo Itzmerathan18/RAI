@@ -1,0 +1,24 @@
+[
+  {
+    "_id": "gal-1",
+    "title": "Robotics Lab Setup",
+    "images": [
+      "robotics-lab-1.jpg",
+      "robotics-lab-2.jpg"
+    ],
+    "description": "State-of-the-art robotics laboratory",
+    "uploadDate": "2023-12-01",
+    "category": "Labs"
+  },
+  {
+    "_id": "gal-2",
+    "title": "Alumni Meet 2024",
+    "images": [
+      "alumni-meet-1.jpg",
+      "alumni-meet-2.jpg"
+    ],
+    "description": "Annual alumni gathering",
+    "uploadDate": "2024-01-15",
+    "category": "Events"
+  }
+]

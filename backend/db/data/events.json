@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "event-1",
+    "title": "AI & Robotics Symposium 2024",
+    "date": "2024-03-15",
+    "location": "Main Campus Auditorium",
+    "description": "Annual symposium on AI and Robotics advancements",
+    "attendees": 150,
+    "status": "Scheduled"
+  },
+  {
+    "_id": "event-2",
+    "title": "Industry-Academia Interaction",
+    "date": "2024-04-10",
+    "location": "Seminar Hall",
+    "description": "Interaction with industry partners",
+    "attendees": 100,
+    "status": "Scheduled"
+  }
+]

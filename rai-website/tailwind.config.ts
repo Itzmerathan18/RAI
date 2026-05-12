@@ -26,22 +26,27 @@ module.exports = {
                 },
                 // ── Keep primary/accent for backwards-compat
                 primary: {
-                    50: '#e0faff',
-                    100: '#b3f4ff',
-                    200: '#80eeff',
-                    300: '#4de7ff',
-                    400: '#26e2ff',
-                    500: '#00E5FF',
-                    600: '#00b2cc',
-                    700: '#008099',
-                    800: '#004d66',
-                    900: '#001a33',
+                    50: '#fefce8',
+                    100: '#fef9c3',
+                    200: '#fef08a',
+                    300: '#fde047',
+                    400: '#facc15',
+                    500: '#EAB308', // Neon Gold
+                    600: '#ca8a04',
+                    700: '#a16207',
+                    800: '#854d0e',
+                    900: '#713f12',
                 },
                 accent: {
-                    300: '#80F0FF',
+                    300: '#4de7ff',
                     400: '#26e2ff',
-                    500: '#00E5FF',
+                    500: '#00E5FF', // Cyan
                     600: '#00b2cc',
+                },
+                gold: {
+                    DEFAULT: '#EAB308',
+                    light: '#facc15',
+                    dark: '#ca8a04',
                 },
                 dark: {
                     900: '#000000',

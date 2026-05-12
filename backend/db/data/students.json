@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "student-1",
+    "name": "Aditya Sharma",
+    "rollNumber": "19CS001",
+    "email": "aditya.sharma@jnnce.ac.in",
+    "semester": 8,
+    "cgpa": 8.5,
+    "specialization": "Robotics"
+  },
+  {
+    "_id": "student-2",
+    "name": "Neha Patel",
+    "rollNumber": "19CS002",
+    "email": "neha.patel@jnnce.ac.in",
+    "semester": 8,
+    "cgpa": 9,
+    "specialization": "AI/ML"
+  }
+]

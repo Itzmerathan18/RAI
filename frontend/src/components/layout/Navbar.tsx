@@ -25,7 +25,8 @@ const navLinks = [
             { label: 'Funded Projects', href: '/research#projects' },
         ],
     },
-    { label: 'Faculty', href: '/faculty' },
+    { label: 'Projects', href: '/projects' },
+    { label: 'Team', href: '/faculty' },
     { label: 'Labs', href: '/labs' },
     {
         label: 'Students', href: '/students',

@@ -1,0 +1,43 @@
+[
+  {
+    "_id": "faculty-1",
+    "name": "Dr. Rajesh Kumar",
+    "designation": "Professor & HOD",
+    "email": "rajesh@jnnce.ac.in",
+    "qualification": "Ph.D",
+    "specialization": "Robotics",
+    "experience": 18,
+    "researchAreas": [
+      "Autonomous Robots",
+      "Path Planning",
+      "SLAM"
+    ]
+  },
+  {
+    "_id": "faculty-2",
+    "name": "Dr. Priya Sharma",
+    "designation": "Associate Professor",
+    "email": "priya@jnnce.ac.in",
+    "qualification": "Ph.D",
+    "specialization": "AI/ML",
+    "experience": 12,
+    "researchAreas": [
+      "Deep Learning",
+      "Computer Vision",
+      "NLP"
+    ]
+  },
+  {
+    "_id": "faculty-3",
+    "name": "Prof. Anil Naik",
+    "designation": "Assistant Professor",
+    "email": "anil@jnnce.ac.in",
+    "qualification": "M.Tech",
+    "specialization": "Control Systems",
+    "experience": 8,
+    "researchAreas": [
+      "PID Control",
+      "Industrial Automation"
+    ]
+  }
+]

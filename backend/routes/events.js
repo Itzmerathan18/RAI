@@ -1,43 +1,44 @@
-const express = require('express');
-const Event = require('../models/Event');
-const { protect, authorize } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+﻿const express = require('express');
+const Store = require('../db/store');
+const { protect } = require('../middleware/auth');
 const router = express.Router();
+const COL = 'events';
 
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
     try {
-        const { category, upcoming } = req.query;
-        const filter = {};
-        if (category) filter.category = category;
-        if (upcoming === 'true') filter.isUpcoming = true;
-        const events = await Event.find(filter).sort('-date');
-        res.json({ success: true, count: events.length, data: events });
+        const data = Store.find(COL);
+        res.json({ success: true, count: data.length, data });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-router.post('/', protect, authorize('super_admin', 'event_manager'), upload.array('images', 10), async (req, res) => {
+router.get('/:id', (req, res) => {
     try {
-        const data = { ...req.body };
-        if (req.files && req.files.length > 0) {
-            data.images = req.files.map(f => `/uploads/${f.filename}`);
-        }
-        const event = await Event.create(data);
-        res.status(201).json({ success: true, data: event });
+        const item = Store.findById(COL, req.params.id);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, data: item });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+router.post('/', protect, (req, res) => {
+    try {
+        const item = Store.create(COL, req.body);
+        res.status(201).json({ success: true, data: item });
     } catch (err) { res.status(400).json({ success: false, message: err.message }); }
 });
 
-router.put('/:id', protect, authorize('super_admin', 'event_manager'), async (req, res) => {
+router.put('/:id', protect, (req, res) => {
     try {
-        const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
-        res.json({ success: true, data: event });
+        const item = Store.update(COL, req.params.id, req.body);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, data: item });
     } catch (err) { res.status(400).json({ success: false, message: err.message }); }
 });
 
-router.delete('/:id', protect, authorize('super_admin', 'event_manager'), async (req, res) => {
+router.delete('/:id', protect, (req, res) => {
     try {
-        await Event.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Event deleted' });
+        const item = Store.delete(COL, req.params.id);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, message: 'Deleted' });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 

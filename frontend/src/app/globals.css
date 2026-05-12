@@ -453,3 +453,40 @@ body {
         opacity: 0;
     }
 }
+
+/* ── TIMELINE (About RAI) ─────────────────────────────────────────────────── */
+.timeline-line {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, var(--cyber), transparent);
+    opacity: 0.4;
+}
+
+/* ── CARD HOVER GLOW (Research / Projects) ─────────────────────────────────── */
+.card-glow-hover {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.card-glow-hover:hover {
+    box-shadow: 0 0 30px var(--cyber-glow), 0 0 60px rgba(0, 229, 255, 0.08);
+    border-color: rgba(0, 229, 255, 0.4);
+}
+
+/* ── MASONRY GALLERY GRID ──────────────────────────────────────────────────── */
+.gallery-masonry {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+    grid-auto-rows: 120px;
+}
+
+.gallery-masonry .tall {
+    grid-row: span 2;
+}
+
+.gallery-masonry .wide {
+    grid-column: span 2;
+}

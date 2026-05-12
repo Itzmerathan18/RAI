@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "lab-1",
+    "name": "Robotics Lab",
+    "incharge": "Dr. Rajesh Kumar",
+    "description": "Advanced robotics research and development",
+    "equipment": [
+      "ABB Robot",
+      "KUKA Robot",
+      "Computer Vision System"
+    ],
+    "capacity": 30,
+    "projects": 5
+  },
+  {
+    "_id": "lab-2",
+    "name": "AI/ML Lab",
+    "incharge": "Dr. Priya Sharma",
+    "description": "Machine Learning and Deep Learning research",
+    "equipment": [
+      "GPU Servers",
+      "TensorFlow Setup",
+      "CUDA Workstations"
+    ],
+    "capacity": 25,
+    "projects": 4
+  }
+]

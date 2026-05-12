@@ -1,32 +1,47 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js';
 import { Bar, Pie, Line } from 'react-chartjs-2';
+import { getPlacements } from '@/lib/api';
 
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement);
 
-const years = [2020, 2021, 2022, 2023, 2024];
-const placed = [36, 40, 45, 50, 54];
-const highest = [9, 10, 12, 15, 18];
-const average = [5.5, 6.0, 6.5, 7.2, 8.5];
-
-const chartOptions = {
-    responsive: true,
-    plugins: {
-        legend: { labels: { color: '#ffffff80', font: { size: 12 } } },
-        title: { display: false }
-    },
-    scales: {
-        x: { ticks: { color: '#ffffff50' }, grid: { color: '#ffffff08' } },
-        y: { ticks: { color: '#ffffff50' }, grid: { color: '#ffffff08' } }
-    }
-};
-
-const companies2024 = ['Infosys', 'TCS', 'ABB', 'Bosch', 'Wipro', 'FANUC', 'Others'];
-const companyCounts = [10, 8, 5, 4, 7, 3, 17];
-
 export default function PlacementsPage() {
+    const [data, setData] = useState<any[]>([]);
+
+    useEffect(() => {
+        getPlacements()
+            .then(res => {
+                if (res.data?.success && res.data?.data) {
+                    const sorted = [...res.data.data].sort((a: any, b: any) => a.year - b.year);
+                    setData(sorted);
+                }
+            })
+            .catch(() => setData([]));
+    }, []);
+
+    const years = data.map(p => p.year);
+    const placed = data.map(p => p.placed);
+    const highest = data.map(p => p.highest);
+    const average = data.map(p => p.average);
+    const totals = data.map(p => p.total);
+    
+    // For 2024 highlights, get the latest year
+    const latest = data.length > 0 ? data[data.length - 1] : { year: new Date().getFullYear(), placed: 0, total: 100, highest: 0, average: 0, companies: '' };
+    const latestRate = latest.total > 0 ? Math.round((latest.placed / latest.total) * 100) : 0;
+    
+    // Mock companies for Pie chart since DB string is comma separated
+    const companiesArray = latest.companies ? latest.companies.split(',').map((c: string) => c.trim()) : [];
+    const companies2024 = companiesArray.length > 0 ? companiesArray : ['Others'];
+    const companyCounts = companies2024.map((_: any) => 10); // Equal share placeholder
+
+    const chartOptions = {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' as const, labels: { color: '#ffffff70', font: { size: 11 } } } },
+        scales: { x: { ticks: { color: '#ffffff70' }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#ffffff70' }, grid: { color: 'rgba(255,255,255,0.05)' } } },
+    };
+
     return (
         <div className="min-h-screen pt-20">
             <section className="py-20 px-4 max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -36,19 +51,19 @@ export default function PlacementsPage() {
                     <p className="text-white/50 max-w-xl mx-auto">Year-wise placement analytics, top recruiting companies, and package insights</p>
                 </motion.div>
 
-                {/* 2024 Highlights */}
+                {/* Latest Highlights */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
                     {[
-                        { label: 'Placement Rate', value: '90%', icon: '📈', color: 'text-accent-400' },
-                        { label: 'Highest Package', value: '18 LPA', icon: '💰', color: 'text-yellow-400' },
-                        { label: 'Average Package', value: '8.5 LPA', icon: '📊', color: 'text-primary-400' },
-                        { label: 'Internships', value: '48', icon: '🏢', color: 'text-blue-400' },
+                        { label: 'Placement Rate', value: `${latestRate}%`, icon: '📈', color: 'text-accent-400' },
+                        { label: 'Highest Package', value: `${latest.highest} LPA`, icon: '💰', color: 'text-yellow-400' },
+                        { label: 'Average Package', value: `${latest.average} LPA`, icon: '📊', color: 'text-primary-400' },
+                        { label: 'Internships', value: '10+', icon: '🏢', color: 'text-blue-400' }, // Hardcoded internships as DB doesn't have it
                     ].map(stat => (
                         <motion.div key={stat.label} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                             className="glass-card p-6 text-center hover:border-primary-500/30 transition-all">
                             <div className="text-3xl mb-2">{stat.icon}</div>
                             <div className={`text-3xl font-display font-black ${stat.color} mb-1`}>{stat.value}</div>
-                            <div className="text-xs text-white/40">{stat.label} · 2024</div>
+                            <div className="text-xs text-white/40">{stat.label} · {latest.year}</div>
                         </motion.div>
                     ))}
                 </div>
@@ -61,7 +76,7 @@ export default function PlacementsPage() {
                             labels: years.map(String),
                             datasets: [
                                 { label: 'Students Placed', data: placed, backgroundColor: 'rgba(99,102,241,0.7)', borderRadius: 6 },
-                                { label: 'Total Strength', data: [60, 60, 60, 60, 60], backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 6 },
+                                { label: 'Total Strength', data: totals, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 6 },
                             ]
                         }} options={chartOptions} />
                     </div>

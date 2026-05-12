@@ -1,0 +1,31 @@
+[
+  {
+    "_id": "homepage-1",
+    "heroEyebrow": "Est. 1980 · VTU Affiliated · NAAC A Grade",
+    "heroTitle": "Robotics & Artificial Intelligence",
+    "heroSubtitle": "JNNCE, Shivamogga",
+    "introTitle": "About JNNCE",
+    "introParagraph1": "JNNCE, established in 1980, is a premier engineering institution committed to academic excellence, innovation, and holistic student development.",
+    "introParagraph2": "The department blends robotics, AI, automation, and industry collaborations to support hands-on learning and research.",
+    "statBadges": [
+      {
+        "value": "60",
+        "label": "Intake/Year"
+      },
+      {
+        "value": "B.E.",
+        "label": "4-Year Programme"
+      },
+      {
+        "value": "5",
+        "label": "Research Labs"
+      },
+      {
+        "value": "--",
+        "label": "Placement Rate"
+      }
+    ],
+    "statBadgesText": "60|Intake/Year\nB.E.|4-Year Programme\n5|Research Labs\n--|Placement Rate",
+    "updatedAt": "2026-05-02T04:40:22.487Z"
+  }
+]

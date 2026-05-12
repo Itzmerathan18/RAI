@@ -1,56 +1,44 @@
 const express = require('express');
-const Faculty = require('../models/Faculty');
-const { protect, authorize } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const Store = require('../db/store');
+const { protect } = require('../middleware/auth');
 const router = express.Router();
+const COL = 'faculty';
 
-// GET all faculty
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
     try {
-        const { specialization } = req.query;
-        const filter = {};
-        if (specialization) filter.specialization = specialization;
-        const faculty = await Faculty.find(filter).sort('name');
-        res.json({ success: true, count: faculty.length, data: faculty });
+        const data = Store.find(COL);
+        res.json({ success: true, count: data.length, data });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// GET single faculty
-router.get('/:id', async (req, res) => {
+router.get('/:id', (req, res) => {
     try {
-        const member = await Faculty.findById(req.params.id);
-        if (!member) return res.status(404).json({ success: false, message: 'Faculty not found' });
-        res.json({ success: true, data: member });
+        const item = Store.findById(COL, req.params.id);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, data: item });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// POST create faculty (admin only)
-router.post('/', protect, authorize('super_admin', 'faculty_admin'), upload.single('photo'), async (req, res) => {
+router.post('/', protect, (req, res) => {
     try {
-        const data = { ...req.body };
-        if (req.file) data.photo = `/uploads/${req.file.filename}`;
-        const member = await Faculty.create(data);
-        res.status(201).json({ success: true, data: member });
+        const item = Store.create(COL, req.body);
+        res.status(201).json({ success: true, data: item });
     } catch (err) { res.status(400).json({ success: false, message: err.message }); }
 });
 
-// PUT update faculty
-router.put('/:id', protect, authorize('super_admin', 'faculty_admin'), upload.single('photo'), async (req, res) => {
+router.put('/:id', protect, (req, res) => {
     try {
-        const data = { ...req.body };
-        if (req.file) data.photo = `/uploads/${req.file.filename}`;
-        const member = await Faculty.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
-        if (!member) return res.status(404).json({ success: false, message: 'Faculty not found' });
-        res.json({ success: true, data: member });
+        const item = Store.update(COL, req.params.id, req.body);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, data: item });
     } catch (err) { res.status(400).json({ success: false, message: err.message }); }
 });
 
-// DELETE faculty
-router.delete('/:id', protect, authorize('super_admin'), async (req, res) => {
+router.delete('/:id', protect, (req, res) => {
     try {
-        const member = await Faculty.findByIdAndDelete(req.params.id);
-        if (!member) return res.status(404).json({ success: false, message: 'Faculty not found' });
-        res.json({ success: true, message: 'Faculty deleted' });
+        const item = Store.delete(COL, req.params.id);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, message: 'Deleted' });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 

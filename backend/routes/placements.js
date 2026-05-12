@@ -1,36 +1,45 @@
-const express = require('express');
-const Placement = require('../models/Placement');
-const { protect, authorize } = require('../middleware/auth');
+﻿const express = require('express');
+const Store = require('../db/store');
+const { protect } = require('../middleware/auth');
 const router = express.Router();
+const COL = 'placements';
 
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
     try {
-        const placements = await Placement.find().sort('-year');
-        res.json({ success: true, count: placements.length, data: placements });
+        const data = Store.find(COL);
+        res.json({ success: true, count: data.length, data });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-router.get('/:year', async (req, res) => {
+router.get('/:id', (req, res) => {
     try {
-        const placement = await Placement.findOne({ year: req.params.year });
-        if (!placement) return res.status(404).json({ success: false, message: 'No placement data for this year' });
-        res.json({ success: true, data: placement });
+        const item = Store.findById(COL, req.params.id);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, data: item });
     } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-router.post('/', protect, authorize('super_admin', 'placement_admin'), async (req, res) => {
+router.post('/', protect, (req, res) => {
     try {
-        const placement = await Placement.create(req.body);
-        res.status(201).json({ success: true, data: placement });
+        const item = Store.create(COL, req.body);
+        res.status(201).json({ success: true, data: item });
     } catch (err) { res.status(400).json({ success: false, message: err.message }); }
 });
 
-router.put('/:id', protect, authorize('super_admin', 'placement_admin'), async (req, res) => {
+router.put('/:id', protect, (req, res) => {
     try {
-        const placement = await Placement.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-        if (!placement) return res.status(404).json({ success: false, message: 'Placement data not found' });
-        res.json({ success: true, data: placement });
+        const item = Store.update(COL, req.params.id, req.body);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, data: item });
     } catch (err) { res.status(400).json({ success: false, message: err.message }); }
+});
+
+router.delete('/:id', protect, (req, res) => {
+    try {
+        const item = Store.delete(COL, req.params.id);
+        if (!item) return res.status(404).json({ success: false, message: 'Not found' });
+        res.json({ success: true, message: 'Deleted' });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 module.exports = router;

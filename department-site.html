@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department of Robotics & AI | JNNCE</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: '#00E5FF',
+                        bg1: '#000000',
+                        bg2: '#0a0a0a',
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .cyber-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #00E5FF 0%, #ffffff 50%, #00E5FF 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: text-shimmer 4s linear infinite;
+        }
+
+        @keyframes text-shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .glass-card {
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            color: #00E5FF;
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border: 1.5px solid #00E5FF;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: #00E5FF;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn-primary:hover {
+            color: #000;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+        }
+
+        .btn-primary:hover::before {
+            transform: scaleX(1);
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.15;
+            pointer-events: none;
+            background: #00E5FF;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        nav {
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body class="bg-bg1 text-white">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-black/80 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-orbitron text-black font-bold">RAI</div>
+            <div>
+                <h1 class="font-orbitron font-bold text-cyber tracking-wider">JNNCE</h1>
+                <p class="text-[10px] text-white/50 font-space uppercase tracking-[0.2em]">Dept of Robotics & AI</p>
+            </div>
+        </div>
+        <div class="hidden md:flex gap-8 font-space text-sm text-white/70">
+            <a href="#about" class="hover:text-cyber transition-colors">About</a>
+            <a href="#stats" class="hover:text-cyber transition-colors">Academics</a>
+            <a href="#research" class="hover:text-cyber transition-colors">Research</a>
+            <a href="#labs" class="hover:text-cyber transition-colors">Labs</a>
+        </div>
+        <a href="#contact" class="btn-primary text-xs px-4 py-2">Apply Now</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+        <div class="cyber-grid"></div>
+        <div class="orb w-[500px] h-[500px]" style="top: -100px; left: -100px;"></div>
+        <div class="orb w-[400px] h-[400px]" style="bottom: -50px; right: -50px; animation-delay: 2s; background: #005cc5;"></div>
+
+        <div class="relative z-10 text-center px-4 max-w-5xl mx-auto fade-in-up">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyber/20 bg-cyber/5 text-cyber text-xs font-orbitron tracking-widest uppercase mb-6">
+                <span class="w-2 h-2 rounded-full bg-cyber animate-pulse"></span>
+                VTU Affiliated · AICTE Approved
+            </div>
+            
+            <h1 class="font-orbitron font-black text-5xl md:text-7xl leading-tight mb-2">
+                <span class="gradient-text">ROBOTICS &</span>
+            </h1>
+            <h1 class="font-orbitron font-black text-4xl md:text-6xl text-white mb-6">
+                ARTIFICIAL INTELLIGENCE
+            </h1>
+            
+            <div class="h-[1px] w-48 bg-gradient-to-r from-transparent via-cyber to-transparent mx-auto mb-8"></div>
+            
+            <p class="font-space text-white/50 text-lg md:text-xl max-w-2xl mx-auto mb-10 tracking-wide">
+                Preparing engineers to build intelligent machines for Industry 4.0 and beyond. Interdisciplinary programme blending AI, Mechatronics, and Control Systems.
+            </p>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#about" class="btn-primary">Explore Department →</a>
+                <a href="#research" class="px-7 py-3 rounded-md font-orbitron text-sm font-semibold border border-white/20 text-white/70 hover:text-cyber hover:border-cyber transition-all text-center">Research Areas</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats / Glance -->
+    <section id="stats" class="py-24 px-6 relative z-10 bg-bg2">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 fade-in-up">
+                <h2 class="font-orbitron text-3xl font-bold mb-4">Department at a <span class="text-cyber">Glance</span></h2>
+                <p class="font-space text-white/50">Numbers that define our excellence globally</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Stat Cards -->
+                <div class="glass-card p-6 text-center fade-in-up">
+                    <div class="text-4xl mb-3">👨‍🏫</div>
+                    <div class="font-orbitron font-bold text-3xl text-cyber counter flex justify-center" data-target="15">0</div>
+                    <div class="font-space text-xs text-white/50 uppercase tracking-widest mt-2">Expert Faculty</div>
+                </div>
+                <div class="glass-card p-6 text-center fade-in-up" style="transition-delay: 0.1s;">
+                    <div class="text-4xl mb-3">👨‍🎓</div>
+                    <div class="font-orbitron font-bold text-3xl text-cyber flex justify-center"><span class="counter" data-target="240">0</span>+</div>
+                    <div class="font-space text-xs text-white/50 uppercase tracking-widest mt-2">Student Strength</div>
+                </div>
+                <div class="glass-card p-6 text-center fade-in-up" style="transition-delay: 0.2s;">
+                    <div class="text-4xl mb-3">🤖</div>
+                    <div class="font-orbitron font-bold text-3xl text-cyber flex justify-center"><span class="counter" data-target="20">0</span>+</div>
+                    <div class="font-space text-xs text-white/50 uppercase tracking-widest mt-2">Research Projects</div>
+                </div>
+                <div class="glass-card p-6 text-center fade-in-up" style="transition-delay: 0.3s;">
+                    <div class="text-4xl mb-3">📈</div>
+                    <div class="font-orbitron font-bold text-3xl text-cyber flex justify-center"><span class="counter" data-target="95">0</span>%</div>
+                    <div class="font-space text-xs text-white/50 uppercase tracking-widest mt-2">Placement Rate</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 px-6 relative z-10">
+        <div class="max-w-6xl mx-auto glass-card p-8 md:p-12 border-cyber/20 bg-cyber/5 fade-in-up">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="font-orbitron text-3xl font-bold mb-6">Building The Future of <span class="text-cyber">Automation</span></h2>
+                    <p class="font-space text-white/60 leading-relaxed mb-6">
+                        Established in 2020, the Department of Robotics and AI at JNNCE is at the forefront of technological education. We focus on bridging the gap between theoretical computer science and hardware engineering.
+                    </p>
+                    <ul class="space-y-4 font-space text-sm text-white/70">
+                        <li class="flex items-start gap-3"><span class="text-cyber mt-1">✓</span> Hands-on AICTE-IDEA Lab aligned with NEP 2020</li>
+                        <li class="flex items-start gap-3"><span class="text-cyber mt-1">✓</span> GPU-powered AI & ML Research Lab</li>
+                        <li class="flex items-start gap-3"><span class="text-cyber mt-1">✓</span> Active industry tie-ups with ABB, FANUC, and Bosch</li>
+                        <li class="flex items-start gap-3"><span class="text-cyber mt-1">✓</span> 75+ distinguished faculty members</li>
+                    </ul>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=600" alt="Robot Arm" class="rounded-xl border border-white/10 opacity-80 hover:opacity-100 transition-opacity h-full object-cover">
+                    <img src="https://images.unsplash.com/photo-1555255707-c07966088b7b?auto=format&fit=crop&q=80&w=600" alt="AI Circuit" class="rounded-xl border border-white/10 opacity-80 hover:opacity-100 transition-opacity mt-8 h-full object-cover">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Research Areas -->
+    <section id="research" class="py-24 px-6 relative z-10 bg-bg2">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 fade-in-up">
+                <h2 class="font-orbitron text-3xl font-bold mb-4">Core <span class="text-cyber">Research</span> Areas</h2>
+                <p class="font-space text-white/50">Funded by VTU, DST-SERB, DRDO, and AICTE</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Research Card 1 -->
+                <div class="glass-card p-8 fade-in-up">
+                    <div class="text-4xl mb-6">🦾</div>
+                    <h3 class="font-orbitron font-bold text-cyber mb-3 tracking-wide flex justify-center text-center">Industrial Robotics</h3>
+                    <p class="font-space text-white/50 text-sm leading-relaxed text-center">Pick-and-place automation, collaborative robots, PLC integration, and smart factory floor systems.</p>
+                </div>
+                <!-- Research Card 2 -->
+                <div class="glass-card p-8 fade-in-up" style="transition-delay: 0.1s;">
+                    <div class="text-4xl mb-6">👁️</div>
+                    <h3 class="font-orbitron font-bold text-cyber mb-3 tracking-wide flex justify-center text-center">Computer Vision</h3>
+                    <p class="font-space text-white/50 text-sm leading-relaxed text-center">Real-time object detection, YOLO algorithms, facial recognition, and visual intelligence for machines.</p>
+                </div>
+                <!-- Research Card 3 -->
+                <div class="glass-card p-8 fade-in-up" style="transition-delay: 0.2s;">
+                    <div class="text-4xl mb-6">🧠</div>
+                    <h3 class="font-orbitron font-bold text-cyber mb-3 tracking-wide flex justify-center text-center">Machine Learning</h3>
+                    <p class="font-space text-white/50 text-sm leading-relaxed text-center">Deep reinforcement learning, neural networks, predictive maintenance, and autonomous behavior modeling.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-black py-12 px-6 border-t border-white/10 relative z-10">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="md:col-span-2">
+                <h3 class="font-orbitron font-bold text-xl text-cyber mb-4">JNNCE RAI Dept</h3>
+                <p class="font-space text-white/50 text-sm max-w-sm">
+                    Forging the next generation of engineers specializing in Artificial Intelligence, Machine Learning, and Robotics Automation.
+                </p>
+            </div>
+            <div>
+                <h4 class="font-orbitron text-sm text-white mb-4">Quick Links</h4>
+                <ul class="font-space text-sm text-white/40 space-y-2 flex flex-col items-start gap-1">
+                    <li><a href="#" class="hover:text-cyber">Admissions</a></li>
+                    <li><a href="#" class="hover:text-cyber">Faculty Directory</a></li>
+                    <li><a href="#" class="hover:text-cyber">Placements 2024</a></li>
+                    <li><a href="#" class="hover:text-cyber">Student Projects</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-orbitron text-sm text-white mb-4">Contact Info</h4>
+                <ul class="font-space text-sm text-white/40 space-y-2 flex flex-col items-start gap-1">
+                    <li>📍 Navule, Shivamogga, KAR</li>
+                    <li>📞 08182-225341</li>
+                    <li>✉️ rai@jnnce.ac.in</li>
+                </ul>
+            </div>
+        </div>
+        <div class="text-center font-space text-xs text-white/30 pt-8 border-t border-white/10">
+            &copy; 2026 JNNCE Dept of Robotics & AI. All rights reserved. Designed via RAI Architecture.
+        </div>
+    </footer>
+
+    <!-- Interactive Elements Scripts -->
+    <script>
+        // Intersection Observer for scroll animations (fade-in-up)
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    
+                    // Simple counter animation trigger
+                    const counters = entry.target.querySelectorAll('.counter');
+                    counters.forEach(counter => {
+                        const target = +counter.getAttribute('data-target');
+                        if(!target) return;
+                        
+                        const duration = 2000; // ms
+                        const increment = target / (duration / 16); // 60fps
+                        
+                        let current = 0;
+                        const updateCounter = () => {
+                            current += increment;
+                            if (current < target) {
+                                counter.innerText = Math.ceil(current);
+                                requestAnimationFrame(updateCounter);
+                            } else {
+                                counter.innerText = target;
+                            }
+                        };
+                        updateCounter();
+                        counter.classList.remove('counter'); // prevent re-running
+                    });
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-up').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

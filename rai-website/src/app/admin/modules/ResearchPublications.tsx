@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave } from 'react-icons/fi';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API = process.env.NEXT_PUBLIC_API_URL || '/api';
 const inputCls = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-white/25 focus:outline-none focus:border-primary-500/60 transition-colors text-sm";
 
 function getToken() { return typeof window !== 'undefined' ? localStorage.getItem('rai_token') || '' : ''; }
@@ -16,6 +16,13 @@ async function apiReq(path: string, method = 'GET', body?: object) {
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         ...(body ? { body: JSON.stringify(body) } : {}),
     });
+    if (res.status === 401) {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('rai_token');
+            localStorage.removeItem('rai_user');
+        }
+        throw new Error('Session expired. Please sign in again.');
+    }
     if (!res.ok) throw new Error(await res.text());
     return res.json();
 }

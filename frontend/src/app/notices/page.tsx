@@ -1,17 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiArrowRight } from 'react-icons/fi';
+import { getNotices } from '@/lib/api';
 
-const CATS = ['All', 'Exam', 'Circular', 'Scholarship', 'Event', 'Admission'];
-const notices = [
-    { id: 1, title: 'Internal Assessment I Schedule – March 2024', desc: 'IA-I for all semester students scheduled from 15th March 2024.', category: 'Exam', date: '28 Feb 2024', isNew: true },
-    { id: 2, title: 'Workshop on ROS2 and Gazebo – Registration Open', desc: 'Two-day hands-on workshop on ROS2 and Gazebo Simulation. Register before 10th March 2024.', category: 'Event', date: '25 Feb 2024', isNew: true },
-    { id: 3, title: 'VTU Scholarship Applications 2024-25', desc: 'Eligible students can apply for VTU post-matric scholarships. Last date: 15 March 2024.', category: 'Scholarship', date: '20 Feb 2024', isNew: false },
-    { id: 4, title: 'Robothon 2024 – Call for Registrations', desc: 'Annual inter-college robotics hackathon. Team size: 3-5 members. Register by 10th April.', category: 'Event', date: '18 Feb 2024', isNew: false },
-    { id: 5, title: 'VTU Examinations Time Table – May/June 2024', desc: 'End semester examinations timetable released for all semesters.', category: 'Exam', date: '10 Feb 2024', isNew: false },
-    { id: 6, title: 'Circular: New Academic Calendar 2024-25', desc: 'Revised academic calendar with holidays and exam schedules notified by VTU.', category: 'Circular', date: '1 Feb 2024', isNew: false },
-];
+const CATS = ['All', 'Exam', 'Circular', 'Scholarship', 'Event', 'Admission', 'General', 'Holiday', 'Placement', 'Result'];
+
+function formatDate(d: string | Date) {
+  if (!d) return '—';
+  const date = typeof d === 'string' ? new Date(d) : d;
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 const catColors: Record<string, string> = {
     Exam: 'bg-red-500/20 text-red-300',
@@ -23,7 +22,15 @@ const catColors: Record<string, string> = {
 
 export default function NoticesPage() {
     const [cat, setCat] = useState('All');
-    const filtered = notices.filter(n => cat === 'All' || n.category === cat);
+    const [noticesData, setNoticesData] = useState<any[]>([]);
+
+    useEffect(() => {
+        getNotices()
+            .then(res => { if (res.data?.success && res.data?.data) setNoticesData(res.data.data); })
+            .catch(() => setNoticesData([]));
+    }, []);
+
+    const filtered = noticesData.filter(n => cat === 'All' || n.category === cat);
 
     return (
         <div className="min-h-screen pt-20">
@@ -45,17 +52,17 @@ export default function NoticesPage() {
 
                 <div className="space-y-4">
                     {filtered.map((n, i) => (
-                        <motion.div key={n.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+                        <motion.div key={n._id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.06 }}
                             className="glass-card p-5 hover:border-primary-500/30 transition-all group cursor-pointer flex items-start gap-4">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className={`badge text-xs ${catColors[n.category] || 'bg-white/10 text-white/50'}`}>{n.category}</span>
-                                    {n.isNew && <span className="badge bg-accent-500/20 text-accent-400 text-xs">🆕 New</span>}
+                                    {n.important && <span className="badge bg-accent-500/20 text-accent-400 text-xs">🆕 New</span>}
                                 </div>
                                 <h3 className="font-semibold text-white mb-1 group-hover:text-primary-300 transition-colors leading-snug">{n.title}</h3>
-                                <p className="text-sm text-white/50 leading-relaxed">{n.desc}</p>
-                                <p className="text-xs text-white/25 mt-2">📅 {n.date}</p>
+                                <p className="text-sm text-white/50 leading-relaxed">{n.description}</p>
+                                <p className="text-xs text-white/25 mt-2">📅 {formatDate(n.date)}</p>
                             </div>
                             <FiArrowRight className="text-white/20 group-hover:text-primary-400 transition-colors flex-shrink-0 mt-1" />
                         </motion.div>

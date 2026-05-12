@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FiExternalLink, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
+import { FiExternalLink, FiMail, FiPhone, FiMapPin, FiGithub } from 'react-icons/fi';
 
 export default function Footer() {
     return (
@@ -37,6 +37,14 @@ export default function Footer() {
                             <div className="flex items-start gap-2 text-xs text-white/25 font-space">
                                 <FiMapPin className="w-3 h-3 text-cyber flex-shrink-0 mt-0.5" /> Navule, Shivamogga – 577201
                             </div>
+                        </div>
+                        {/* Social */}
+                        <div className="flex items-center gap-3 mt-4">
+                            <a href="https://github.com" target="_blank" rel="noreferrer" aria-label="GitHub" className="p-2 rounded-lg border border-white/10 text-white/35 hover:text-cyber hover:border-cyber/30 transition-all">
+                                <FiGithub className="w-4 h-4" />
+                            </a>
+                            <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn" className="p-2 rounded-lg border border-white/10 text-white/35 hover:text-cyber hover:border-cyber/30 transition-all text-xs font-orbitron">in</a>
+                            <a href="https://researchgate.net" target="_blank" rel="noreferrer" aria-label="ResearchGate" className="p-2 rounded-lg border border-white/10 text-white/35 hover:text-cyber hover:border-cyber/30 transition-all text-[10px] font-orbitron">RG</a>
                         </div>
                     </div>
 

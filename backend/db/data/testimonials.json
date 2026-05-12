@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "test-1",
+    "name": "Sahana R",
+    "designation": "Class of 2024",
+    "quote": "The RAI department gave me a real project mindset. The labs and faculty support made a big difference.",
+    "rating": 5,
+    "featured": true,
+    "date": "2024-04-18"
+  },
+  {
+    "_id": "test-2",
+    "name": "Karthik B",
+    "designation": "Alumnus, Software Engineer",
+    "quote": "The emphasis on robotics and AI tools helped me transition smoothly into industry interviews and project work.",
+    "rating": 5,
+    "featured": true,
+    "date": "2024-04-20"
+  }
+]

@@ -10,7 +10,7 @@ import { NextRequest } from "next/server";
 export const ADMIN_EMAIL = "rai@jnnce.ac.in";
 export const ADMIN_PASSWORD = "rai#@123";
 
-const JWT_SECRET = process.env.JWT_SECRET || "rai_jnnce_super_secret_jwt_key_2024";
+const JWT_SECRET = process.env.JWT_SECRET || "rai_jnnce_secret_2024";
 
 // ── JWT helpers ───────────────────────────────────────────────────────────────
 export function signToken(payload: { id: string; role: string; email: string }): string {

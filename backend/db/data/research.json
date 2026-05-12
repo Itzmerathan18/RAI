@@ -1,0 +1,27 @@
+[
+  {
+    "_id": "research-1",
+    "title": "Advanced Robotics and Automation",
+    "leader": "Dr. Rajesh Kumar",
+    "description": "Research in autonomous systems and robotics",
+    "status": "Ongoing",
+    "members": [
+      "Dr. Rajesh Kumar",
+      "Prof. Anil Naik"
+    ],
+    "publications": 15,
+    "fundingAmount": 500000
+  },
+  {
+    "_id": "research-2",
+    "title": "Machine Learning for Industrial Applications",
+    "leader": "Dr. Priya Sharma",
+    "description": "AI/ML solutions for industry 4.0",
+    "status": "Ongoing",
+    "members": [
+      "Dr. Priya Sharma"
+    ],
+    "publications": 12,
+    "fundingAmount": 450000
+  }
+]

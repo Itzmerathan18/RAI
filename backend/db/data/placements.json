@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "place-1",
+    "company": "TCS",
+    "designation": "Software Engineer",
+    "salary": 650000,
+    "joiningDate": "2024-06-15",
+    "studentsPlaced": 5,
+    "studentNames": [
+      "Student 1",
+      "Student 2",
+      "Student 3",
+      "Student 4",
+      "Student 5"
+    ]
+  },
+  {
+    "_id": "place-2",
+    "company": "Infosys",
+    "designation": "Systems Engineer",
+    "salary": 600000,
+    "joiningDate": "2024-07-01",
+    "studentsPlaced": 3,
+    "studentNames": [
+      "Student 6",
+      "Student 7",
+      "Student 8"
+    ]
+  }
+]

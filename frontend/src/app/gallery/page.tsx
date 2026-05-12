@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiZoomIn, FiArrowRight } from 'react-icons/fi';
 import Link from 'next/link';
+import { getGallery } from '@/lib/api';
 
-const CATEGORIES = ['All', 'Events'];
+const CATEGORIES = ['All', 'Events', 'Competitions', 'Cultural', 'Projects', 'Industrial Visits', 'Students', 'Workshops', 'Laboratories', 'College Events'];
 
 interface GalleryItem {
     id: string | number;
@@ -12,11 +13,9 @@ interface GalleryItem {
     title: string;
     emoji: string;
     desc: string;
-    img?: string;  // real photo path if available
+    img?: string;
     isEvent?: boolean;
 }
-
-const galleryItems: GalleryItem[] = [];
 
 const emojiColors: Record<string, string> = {
     Labs: 'from-cyan-900/50 to-cyan-950',
@@ -24,31 +23,39 @@ const emojiColors: Record<string, string> = {
     Department: 'from-indigo-900/50 to-indigo-950',
     Competitions: 'from-red-900/40 to-red-950',
     Students: 'from-green-900/40 to-green-950',
+    Workshops: 'from-amber-900/40 to-amber-950',
+    Laboratories: 'from-cyan-900/50 to-cyan-950',
 };
 
 export default function GalleryPage() {
     const [active, setActive] = useState('All');
     const [lightbox, setLightbox] = useState<GalleryItem | null>(null);
-    const [adminEvents, setAdminEvents] = useState<any[]>([]);
+    const [items, setItems] = useState<GalleryItem[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Load real events from the CMS (localStorage mock)
-        const stored = JSON.parse(localStorage.getItem('admin_events') || '[]');
-        setAdminEvents(stored);
+        getGallery()
+            .then(res => {
+                if (res.data?.success && res.data?.data) {
+                    const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/?$/, '') || 'http://localhost:5000';
+                    const toUrl = (p: string) => (p && !p.startsWith('http') ? `${base}${p.startsWith('/') ? '' : '/'}${p}` : p);
+                    const list = (res.data.data as any[]).map((g: any) => ({
+                        id: g._id,
+                        category: g.category || 'Events',
+                        title: g.title,
+                        emoji: '📷',
+                        desc: g.description || `${g.date ? `${g.date} — ` : ''}${g.eventDuration || ''}`.trim() || '—',
+                        img: toUrl(g.thumbnail || (g.images && g.images[0]) || '') || undefined,
+                        isEvent: true,
+                    }));
+                    setItems(list);
+                }
+            })
+            .catch(() => setItems([]))
+            .finally(() => setLoading(false));
     }, []);
 
-    const dynamicItems: GalleryItem[] = adminEvents.map(e => ({
-        id: e.id,
-        category: e.category || 'Events',
-        title: e.title,
-        emoji: '📅',
-        desc: `${e.date ? `📅 ${e.date} — ` : ''}${e.description}`,
-        isEvent: true,
-    }));
-
-    const combinedItems = [...galleryItems, ...dynamicItems];
-
-    const filtered = active === 'All' ? combinedItems : combinedItems.filter(g => g.category === active);
+    const filtered = active === 'All' ? items : items.filter(g => g.category === active);
 
     return (
         <div className="min-h-screen bg-black pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -61,7 +68,7 @@ export default function GalleryPage() {
                 <h1 className="section-title text-3xl text-white mb-3">
                     Life at <span className="gradient-text-static">RAI · JNNCE</span>
                 </h1>
-                <p className="text-white/35 text-sm font-space">Events managed entirely through the Admin Portal</p>
+                <p className="text-white/35 text-sm font-space">Photos and events from RAI Lab — managed by admin</p>
             </div>
 
             {/* Category filter */}
@@ -77,11 +84,12 @@ export default function GalleryPage() {
                 ))}
             </div>
 
+            {loading && <div className="text-center py-12 text-white/40">Loading gallery…</div>}
             {/* Grid */}
             <motion.div layout className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <AnimatePresence>
-                    {filtered.map(item => (
-                        <motion.div key={item.id} layout
+                    {!loading && filtered.map(item => (
+                        <motion.div key={String(item.id)} layout
                             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2 }}
                             onClick={() => !item.isEvent && setLightbox(item)}

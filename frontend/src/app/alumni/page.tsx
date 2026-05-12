@@ -1,17 +1,20 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiLinkedin, FiMail } from 'react-icons/fi';
-
-const alumni = [
-    { name: 'Arjun Hegde', batch: '2020-24', role: 'Robotics Engineer', org: 'ABB Robotics, Bengaluru', mentor: true, story: 'Started as an intern during 3rd year, converted to full-time Robotics Engineer. Working on collaborative robots for automotive assembly.' },
-    { name: 'Sneha R.', batch: '2019-23', role: 'ML Engineer', org: 'Samsung R&D, Bengaluru', mentor: true, story: 'Research focuses on embedded AI for wearables. Published 2 papers at ICCV and contributed to open-source CV tools.' },
-    { name: 'Kiran Patil', batch: '2018-22', role: 'Automation Engineer', org: 'Bosch India, Bengaluru', mentor: false, story: 'Specializes in industrial PLC automation and SCADA systems at Bosch India.' },
-    { name: 'Divya Kumar', batch: '2019-23', role: 'AI Software Engineer', org: 'Infosys AI Lab, Pune', mentor: true, story: 'Working on NLP-based enterprise AI solutions. Leads a team of 6 engineers.' },
-    { name: 'Rohit Singh', batch: '2020-24', role: 'Startup Founder', org: 'AgriBot AI (Self-Founded)', mentor: false, story: 'Founded AgriBot AI, an AI-powered crop monitoring startup incubated at JNNCE and now funded by BIRAC.' },
-    { name: 'Meera Nair', batch: '2018-22', role: 'Control Systems Engineer', org: 'ISRO, Bengaluru', mentor: false, story: "Works on guidance and navigation systems at ISRO's Space Applications Centre." },
-];
+import { getAlumni } from '@/lib/api';
 
 export default function AlumniPage() {
+    const [alumni, setAlumni] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getAlumni()
+            .then(res => { if (res.data?.success && res.data?.data) setAlumni(res.data.data); })
+            .catch(() => setAlumni([]))
+            .finally(() => setLoading(false));
+    }, []);
+
     return (
         <div className="min-h-screen pt-20">
             <section className="py-20 px-4 max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -21,9 +24,10 @@ export default function AlumniPage() {
                     <p className="text-white/50 max-w-xl mx-auto">RAI graduates making an impact at ISRO, ABB, Samsung, Bosch, Infosys, and their own startups</p>
                 </motion.div>
 
+                {loading && <div className="text-center py-12 text-white/40">Loading alumni…</div>}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-                    {alumni.map((a, i) => (
-                        <motion.div key={a.name} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+                    {!loading && alumni.map((a, i) => (
+                        <motion.div key={a._id || a.name || i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.08 }} viewport={{ once: true }}
                             className="glass-card p-6 hover:border-primary-500/40 transition-all duration-300">
                             <div className="flex items-start gap-4 mb-4">
@@ -33,18 +37,18 @@ export default function AlumniPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-semibold text-white truncate">{a.name}</h3>
-                                        {a.mentor && <span className="badge bg-accent-500/20 text-accent-400 text-xs flex-shrink-0">Mentor</span>}
+                                        {a.isMentor && <span className="badge bg-accent-500/20 text-accent-400 text-xs flex-shrink-0">Mentor</span>}
                                     </div>
-                                    <p className="text-sm text-primary-300">{a.role}</p>
-                                    <p className="text-xs text-white/40">{a.org}</p>
+                                    <p className="text-sm text-primary-300">{a.currentPosition || 'Alumnus'}</p>
+                                    <p className="text-xs text-white/40">{a.currentOrganization || '—'}</p>
                                 </div>
                             </div>
-                            <p className="text-sm text-white/55 leading-relaxed mb-4 italic">&ldquo;{a.story}&rdquo;</p>
+                            {a.successStory && <p className="text-sm text-white/55 leading-relaxed mb-4 italic">&ldquo;{a.successStory}&rdquo;</p>}
                             <div className="flex items-center justify-between pt-3 border-t border-white/5">
                                 <span className="text-xs text-white/30">Batch {a.batch}</span>
                                 <div className="flex gap-2">
-                                    <a href="#" className="w-8 h-8 rounded-lg bg-white/5 hover:bg-blue-500/20 flex items-center justify-center text-white/40 hover:text-blue-400 transition-all"><FiLinkedin className="w-4 h-4" /></a>
-                                    <a href="#" className="w-8 h-8 rounded-lg bg-white/5 hover:bg-primary-500/20 flex items-center justify-center text-white/40 hover:text-primary-400 transition-all"><FiMail className="w-4 h-4" /></a>
+                                    {a.linkedinLink && <a href={a.linkedinLink} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 hover:bg-blue-500/20 flex items-center justify-center text-white/40 hover:text-blue-400 transition-all"><FiLinkedin className="w-4 h-4" /></a>}
+                                    {a.email && <a href={`mailto:${a.email}`} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-primary-500/20 flex items-center justify-center text-white/40 hover:text-primary-400 transition-all"><FiMail className="w-4 h-4" /></a>}
                                 </div>
                             </div>
                         </motion.div>
